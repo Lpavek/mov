@@ -6,133 +6,111 @@
 <title>Přehrávač seriálů — TV Edition</title>
 <style>
 :root{
-  --bg:#070707; --panel:#111; --panel2:#171717; --text:#f2f2f2;
-  --muted:#8f8f8f; --red:#a50909; --red2:#e51a1a; --line:#292929;
-  --focus-glow: 0 0 15px rgba(229, 26, 26, 0.8);
+  --bg:#070707; --panel:#141414; --text:#f2f2f2;
+  --muted:#8f8f8f; --red:#e51a1a; --line:#292929;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif; user-select:none; overflow-x:hidden}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;user-select:none;overflow-x:hidden}
 body{min-height:100vh}
 button,input,select{font:inherit}
 button{cursor:pointer}
 
-/* TV FOCUS ENGINE STYLES (Důležité pro ovladač) */
+/* TV FOCUS STYLES */
 :focus, .tv-focus {
   outline: none !important;
-  border-color: var(--red2) !important;
-  box-shadow: var(--focus-glow) !important;
-  transform: scale(1.05);
+  border-color: var(--red) !important;
+  box-shadow: 0 0 20px rgba(229, 26, 26, 0.9) !important;
+  transform: scale(1.04);
   z-index: 5;
 }
 
 .hero{
-  min-height:35vh;padding:40px 6vw 20px;display:flex;align-items:flex-end;
-  background:
-    radial-gradient(circle at 72% 40%,rgba(160,0,0,.15),transparent 35%),
-    linear-gradient(180deg,rgba(0,0,0,.05),#070707 95%);
+  padding:30px 5vw 15px; background:#0d0d0d; border-bottom:2px solid var(--line);
 }
-.brand{font-weight:900;letter-spacing:.16em;font-size:14px;color:#c40000}
-.hero h1{font-size:clamp(40px,7vw,80px);line-height:1;margin:12px 0;text-transform:uppercase;letter-spacing:-.03em}
-.badge{display:inline-block;background:#a50909;padding:6px 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}
-.container{width:min(1280px,90vw);margin:auto}
-.section-title{font-size:24px;margin:25px 0 16px; font-weight: 800;}
+.brand{font-weight:900;letter-spacing:.15em;font-size:13px;color:var(--red)}
+.hero h1{font-size:36px;margin:8px 0;text-transform:uppercase;letter-spacing:-.02em}
+.badge{display:inline-block;background:var(--red);padding:4px 10px;font-size:12px;font-weight:800;text-transform:uppercase}
 
-/* Epizody v gridu přizpůsobeném pro šipky */
-.episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding-bottom:60px}
+.container{width:90vw;margin:20px auto 0}
+.section-title{font-size:22px;margin:0 0 16px 0;font-weight:800}
+
+.episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding-bottom:80px}
 .card{
-  background:linear-gradient(145deg,#171717,#0d0d0d);border:2px solid var(--line);
-  border-radius:10px;padding:22px;min-height:170px;transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  display:flex; flex-direction:column; justify-content:space-between;
+  background:var(--panel);border:2px solid var(--line);
+  border-radius:8px;padding:20px;min-height:150px;transition:transform 0.15s, border-color 0.15s;
+  display:flex;flex-direction:column;justify-content:space-between;
 }
-.ep{color:#a9a9a9;font-size:13px;text-transform:uppercase;letter-spacing:.1em; font-weight:700;}
-.card h3{margin:8px 0 16px;font-size:22px}
-.play{border:0;border-radius:6px;background:#eee;color:#090909;padding:12px 18px;font-weight:800; font-size:15px; transition: 0.15s;}
-.card:focus-within .play, .card.tv-focus .play { background: var(--red2); color:#fff; }
+.ep{color:var(--muted);font-size:12px;text-transform:uppercase;font-weight:700}
+.card h3{margin:6px 0 14px;font-size:20px}
+.play{border:0;border-radius:4px;background:#eee;color:#000;padding:10px 16px;font-weight:800;font-size:14px}
+.card:focus .play, .card:focus-within .play { background:var(--red);color:#fff; }
 
 .admin{
   position:fixed;right:25px;bottom:25px;border:2px solid #444;background:#151515;color:#fff;
-  border-radius:999px;padding:14px 22px;z-index:20; font-weight:700; font-size:15px; transition: 0.2s;
+  border-radius:50px;padding:12px 20px;z-index:20;font-weight:700;font-size:14px;
 }
 
-/* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;z-index:30;overflow:auto;padding:35px 15px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;z-index:30;padding:30px 15px;overflow:auto}
 .modal.open{display:block}
-.panel{width:min(780px,100%);margin:auto;background:#101010;border:2px solid #333;border-radius:12px;padding:28px}
+.panel{width:min(700px,100%);margin:auto;background:#111;border:2px solid #333;border-radius:10px;padding:25px}
 .panel h2{margin-top:0}
-.formrow{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:14px 0}
-input,select{width:100%;background:#080808;color:#fff;border:2px solid #444;border-radius:8px;padding:12px; font-size:16px;}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-.action{border:0;border-radius:8px;padding:12px 18px;background:#ddd;color:#111;font-weight:800; font-size:15px; transition: 0.2s;}
+.formrow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;margin:12px 0}
+input,select{width:100%;background:#000;color:#fff;border:2px solid #444;border-radius:6px;padding:10px;font-size:15px}
+.actions{display:flex;gap:10px;margin-top:20px}
+.action{border:0;border-radius:6px;padding:10px 16px;background:#ddd;color:#000;font-weight:800}
 .action.red{background:var(--red);color:#fff}
-.saved{margin-top:22px;border-top:1px solid #292929;padding-top:15px}
-.savedrow{display:flex;gap:8px;align-items:center;padding:10px;border-bottom:1px solid #222;}
 
-/* PŘEHRÁVAČ S TV OVLÁDÁNÍM */
-.player{position:fixed;inset:0;background:#000;z-index:40;display:none;flex-direction:column; cursor:none;}
+/* PŘEHRÁVAČ */
+.player{position:fixed;inset:0;background:#000;z-index:40;display:none;flex-direction:column}
 .player.open{display:flex}
-
-.video-wrap{position:relative;flex:1;min-height:0;background:#000;display:flex;align-items:center;justify-content:center; overflow:hidden;}
+.video-wrap{position:relative;flex:1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 video{width:100%;height:100%;object-fit:contain}
 
-/* TV Seek Indicator (-10s / +10s animace na středu obrazovky) */
-.seek-indicator {
-  position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.7);
-  color: #fff; padding: 18px 30px; border-radius: 50px; font-size: 24px; font-weight: 900;
-  border: 2px solid var(--red2); display: none; pointer-events: none; z-index: 20;
+.seek-indicator{
+  position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.8);
+  color:#fff;padding:15px 25px;border-radius:40px;font-size:22px;font-weight:900;
+  border:2px solid var(--red);display:none;z-index:20;
 }
-.seek-indicator.left { left: 10%; }
-.seek-indicator.right { right: 10%; }
+.seek-indicator.left{left:10%}
+.seek-indicator.right{right:10%}
 
-.player-ui, .player-top {
-  position:absolute; transition:opacity .25s ease, transform .25s ease; z-index:10;
+.player-ui, .player-top{position:absolute;transition:opacity .2s, transform .2s;z-index:10}
+.player-top{
+  top:0;left:0;right:0;padding:25px 4vw;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent);
 }
-.player-top {
-  top:0; left:0; right:0; padding:30px 4vw; display:flex; justify-content:space-between; align-items:center;
-  background:linear-gradient(180deg, rgba(0,0,0,0.9), transparent); pointer-events:none;
-}
-.player-top * { pointer-events:auto; }
-.now{font-weight:800; font-size:20px; text-shadow:0 2px 10px #000; color:#fff;}
+.now{font-weight:800;font-size:18px;color:#fff}
+.close{background:rgba(30,30,30,.9);border:2px solid transparent;color:#fff;width:44px;height:40px;border-radius:6px;font-size:18px}
 
 .player-ui{
-  bottom:0; left:0; right:0; padding:50px 4vw 30px;
-  background:linear-gradient(transparent, rgba(0,0,0,0.95));
+  bottom:0;left:0;right:0;padding:40px 4vw 25px;
+  background:linear-gradient(0deg,rgba(0,0,0,0.95),transparent);
 }
+.player.hide-ui .player-ui{opacity:0;transform:translateY(15px);pointer-events:none}
+.player.hide-ui .player-top{opacity:0;transform:translateY(-15px);pointer-events:none}
 
-.player.hide-ui .player-ui { opacity:0; transform:translateY(15px); pointer-events:none; }
-.player.hide-ui .player-top { opacity:0; transform:translateY(-15px); pointer-events:none; }
+.progress{height:8px;background:#444;border-radius:4px;margin-bottom:12px;position:relative}
+.progress-bar{height:100%;width:0;background:var(--red);border-radius:4px}
 
-.progress-container{ position:relative; padding:12px 0; margin-bottom:15px; }
-.progress{ height:8px; background:#444; border-radius:6px; position:relative; }
-.progress-bar{ height:100%; width:0; background:var(--red2); border-radius:6px; position:relative;}
-
-.controls{display:flex;align-items:center;gap:14px}
-.ctrl{
-  width:54px;height:48px;border:2px solid transparent;border-radius:8px;background:rgba(30,30,30,.9);color:#fff;font-size:20px; transition:0.15s;
-}
-.time{font-variant-numeric:tabular-nums;color:#ddd;font-size:16px;margin:0 10px; font-weight:700;}
+.controls{display:flex;align-items:center;gap:12px}
+.ctrl{width:50px;height:44px;border:2px solid transparent;border-radius:6px;background:rgba(30,30,30,.9);color:#fff;font-size:18px}
+.time{font-variant-numeric:tabular-nums;color:#ddd;font-size:15px;margin:0 8px;font-weight:700}
 .spacer{flex:1}
 
-/* Netflix Next Episode TV Widget */
-.next-ep-card {
-  position: absolute; right: 4vw; bottom: 120px; z-index: 25;
-  background: rgba(18, 18, 18, 0.95); border: 2px solid var(--red2);
-  border-radius: 10px; padding: 18px 24px; display: none; align-items: center; gap: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+.next-ep-card{
+  position:absolute;right:4vw;bottom:110px;z-index:25;
+  background:rgba(18,18,18,0.95);border:2px solid var(--red);
+  border-radius:8px;padding:15px 20px;display:none;align-items:center;gap:15px;
 }
-.next-ep-card.show { display: flex; }
-.next-ep-info .label { font-size: 12px; text-transform: uppercase; color: #aaa; letter-spacing: 0.05em; font-weight:700;}
-.next-ep-info .title { font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px; }
+.next-ep-card.show{display:flex}
+.next-ep-info .label{font-size:11px;text-transform:uppercase;color:#aaa;font-weight:700}
+.next-ep-info .title{font-size:16px;font-weight:800;color:#fff;margin-top:2px}
+.next-btn{position:relative;overflow:hidden;border:0;border-radius:5px;background:#333;color:#fff;padding:10px 18px;font-weight:800;font-size:15px}
+.next-btn-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--red);opacity:0.85}
+.next-btn-text{position:relative;z-index:2}
+.cancel-next{background:transparent;border:0;color:#888;font-size:18px;padding:4px}
 
-.next-btn {
-  position: relative; overflow: hidden; border: 0; border-radius: 6px;
-  background: #333; color: #fff; padding: 12px 22px; font-weight: 800; font-size: 16px;
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
-}
-.next-btn-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--red2); opacity: 0.9; }
-.next-btn-text { position: relative; z-index: 2; }
-.cancel-next { background: transparent; border: 0; color: #888; font-size: 20px; padding: 6px; border-radius: 6px; }
-
-.toast{position:fixed;left:50%;bottom:35px;transform:translateX(-50%);background:#eee;color:#111;padding:12px 24px;border-radius:8px;display:none;z-index:60;font-weight:800; font-size:16px;}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#eee;color:#000;padding:10px 20px;border-radius:6px;display:none;z-index:60;font-weight:800}
 </style>
 </head>
 <body>
@@ -161,24 +139,21 @@ video{width:100%;height:100%;object-fit:contain}
       <button class="action red" id="saveBtn" tabindex="0" onclick="saveLink()">Uložit dočasně</button>
       <button class="action" tabindex="0" onclick="closeAdmin()">Zavřít</button>
     </div>
-    <div id="saved" class="saved"></div>
   </div>
 </div>
 
 <div id="player" class="player">
-  <div class="video-wrap" id="videoWrap">
-    
+  <div class="video-wrap">
     <div class="seek-indicator left" id="seekLeft">↶ 10s</div>
     <div class="seek-indicator right" id="seekRight">10s ↷</div>
 
     <div class="player-top">
       <div class="now" id="now"></div>
-      <button class="ctrl close" id="closePlayerBtn" tabindex="0" onclick="closePlayer()" title="Zavřít">✕</button>
+      <button class="ctrl close" id="closePlayerBtn" tabindex="0" onclick="closePlayer()">✕</button>
     </div>
 
     <video id="video" playsinline preload="metadata"></video>
 
-    <!-- Netflix Auto-Skip Widget -->
     <div class="next-ep-card" id="nextEpCard">
       <div class="next-ep-info">
         <span class="label">Další epizoda</span>
@@ -188,18 +163,15 @@ video{width:100%;height:100%;object-fit:contain}
         <div class="next-btn-fill" id="nextBtnFill"></div>
         <span class="next-btn-text">Přehrát díl <span id="nextCountdown">10</span>s ▶</span>
       </button>
-      <button class="cancel-next" id="cancelNextBtn" tabindex="0" onclick="dismissNextPrompt()" title="Zrušit">✕</button>
+      <button class="cancel-next" id="cancelNextBtn" tabindex="0" onclick="dismissNextPrompt()">✕</button>
     </div>
     
-    <div class="player-ui" id="playerUI">
-      <div class="progress-container">
-        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-      </div>
-
+    <div class="player-ui">
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
       <div class="controls">
-        <button class="ctrl" id="seekBackBtn" tabindex="0" onclick="seekBy(-10)" title="Zpět 10 s">↶</button>
+        <button class="ctrl" id="seekBackBtn" tabindex="0" onclick="seekBy(-10)">↶</button>
         <button class="ctrl" id="playBtn" tabindex="0" onclick="togglePlay()">▶</button>
-        <button class="ctrl" id="seekForwardBtn" tabindex="0" onclick="seekBy(10)" title="Dopředu 10 s">↷</button>
+        <button class="ctrl" id="seekForwardBtn" tabindex="0" onclick="seekBy(10)">↷</button>
         <span class="time" id="time">0:00 / 0:00</span>
         <span class="spacer"></span>
         <button class="ctrl" id="muteBtn" tabindex="0" onclick="toggleMute()">🔊</button>
@@ -212,75 +184,103 @@ video{width:100%;height:100%;object-fit:contain}
 <div id="toast" class="toast"></div>
 
 <script>
-const EPISODES = Array.from({length:8},(_,i)=>({n:i+1,title:`Epizoda ${i+1}`}));
-const SKIP_THRESHOLD = 10;
+var EPISODES = [
+  {n:1, title:"Epizoda 1"}, {n:2, title:"Epizoda 2"},
+  {n:3, title:"Epizoda 3"}, {n:4, title:"Epizoda 4"},
+  {n:5, title:"Epizoda 5"}, {n:6, title:"Epizoda 6"},
+  {n:7, title:"Epizoda 7"}, {n:8, title:"Epizoda 8"}
+];
+var SKIP_THRESHOLD = 10;
+var links = {};
+var current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null;
+var nextPromptDismissed = false;
 
-let links = {};
-let current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null;
-let nextPromptDismissed = false;
+function $(id){ return document.getElementById(id); }
 
-const $=id=>document.getElementById(id);
-
-async function loadAutoJSON() {
-  try {
-    const res = await fetch('episodes.json?v=' + Date.now());
-    if (res.ok) links = await res.json();
-  } catch (err) {}
-  render();
+function loadAutoJSON() {
+  fetch('episodes.json?v=' + new Date().getTime())
+    .then(function(res){
+      if(res.ok) return res.json();
+      return {};
+    })
+    .then(function(data){
+      links = data || {};
+      render();
+    })
+    .catch(function(err){
+      console.log("JSON Load error", err);
+      render();
+    });
 }
 
 function render(){
-  $("episodes").innerHTML=EPISODES.map(e=>{
-    const key = String(e.n);
-    const hasLink = !!(links[key] && links[key].trim());
-    return `
-    <article class="card" tabindex="0" data-ep="${e.n}" onclick="playEpisode(${e.n})">
-      <div class="ep">Epizoda ${e.n}</div>
-      <h3>${e.title}</h3>
-      <button class="play" tabindex="-1">${hasLink ? "▶ Přehrát" : "○ Bez odkazu"}</button>
-    </article>`;
-  }).join("");
+  var html = "";
+  for(var i=0; i<EPISODES.length; i++){
+    var e = EPISODES[i];
+    var key = String(e.n);
+    var hasLink = links[key] && links[key].trim().length > 0;
+    html += '<article class="card" tabindex="0" data-ep="' + e.n + '" onclick="playEpisode(' + e.n + ')">' +
+      '<div class="ep">Epizoda ' + e.n + '</div>' +
+      '<h3>' + e.title + '</h3>' +
+      '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
+    '</article>';
+  }
+  $("episodes").innerHTML = html;
 
-  // Po vykreslení dát automaticky Focus na 1. epizodu pro ovladač TV
-  const firstCard = document.querySelector('.card');
-  if(firstCard && !$("player").classList.contains("open")) firstCard.focus();
+  var firstCard = document.querySelector('.card');
+  if(firstCard && !$("player").classList.contains("open")) {
+    firstCard.focus();
+  }
 }
 
 function openAdmin(){
-  $("adminModal").classList.add("open");
-  $("episodeSelect").innerHTML=EPISODES.map(e=>`<option value="${e.n}">Epizoda ${e.n}</option>`).join("");
-  $("episodeSelect").onchange=loadSelected;
+  $("adminModal").className = "modal open";
+  var html = "";
+  for(var i=0; i<EPISODES.length; i++){
+    html += '<option value="' + EPISODES[i].n + '">Epizoda ' + EPISODES[i].n + '</option>';
+  }
+  $("episodeSelect").innerHTML = html;
+  $("episodeSelect").onchange = loadSelected;
   loadSelected();
   $("episodeSelect").focus();
 }
+
 function closeAdmin(){
-  $("adminModal").classList.remove("open");
+  $("adminModal").className = "modal";
   $("adminBtn").focus();
 }
+
 function loadSelected(){ 
-  const key = String($("episodeSelect").value);
+  var key = String($("episodeSelect").value);
   $("urlInput").value = links[key] || ""; 
 }
 
 function saveLink(){
-  const n = String($("episodeSelect").value);
-  const url = $("urlInput").value.trim();
-  if(!url){toast("Vlož nejdřív odkaz.");return}
+  var n = String($("episodeSelect").value);
+  var url = $("urlInput").value.trim();
+  if(!url){ toast("Vlož nejdřív odkaz."); return; }
   links[n] = url;
-  render(); toast(`Dočasně uloženo.`);
+  render(); 
+  toast("Dočasně uloženo.");
 }
 
 function playEpisode(n){
-  const key = String(n);
-  if(!links[key]){ openAdmin(); $("episodeSelect").value=n; loadSelected(); toast(`Epizoda ${n} nemá odkaz.`); return; }
-  current=n; 
+  var key = String(n);
+  if(!links[key]){ 
+    openAdmin(); 
+    $("episodeSelect").value = n; 
+    loadSelected(); 
+    toast("Epizoda " + n + " nemá odkaz."); 
+    return; 
+  }
+  current = n; 
   nextPromptDismissed = false;
   hideNextPrompt();
 
-  $("now").textContent=`Epizoda ${n}`;
-  $("video").src=links[key]; 
-  $("player").classList.add("open");
-  $("video").play().catch(()=>{});
+  $("now").textContent = "Epizoda " + n;
+  $("video").src = links[key]; 
+  $("player").className = "player open";
+  $("video").play().catch(function(){});
   resetUIHide();
   $("playBtn").focus();
 }
@@ -297,123 +297,115 @@ function dismissNextPrompt(){
   $("playBtn").focus();
 }
 
-function hideNextPrompt(){ $("nextEpCard").classList.remove("show"); }
+function hideNextPrompt(){ $("nextEpCard").className = "next-ep-card"; }
 
 function closePlayer(){ 
   $("video").pause(); 
   $("video").removeAttribute("src"); 
   $("video").load(); 
-  $("player").classList.remove("open");
+  $("player").className = "player";
   hideNextPrompt();
   clearTimeout(hideTimer);
   
-  // Vracení focusu na naposledy přehrávanou epizodu
-  const activeCard = document.querySelector(`.card[data-ep="${current}"]`);
+  var activeCard = document.querySelector('.card[data-ep="' + current + '"]');
   if(activeCard) activeCard.focus();
 }
 
 function togglePlay(){
-  const v=$("video"); 
+  var v = $("video"); 
   v.paused ? v.play() : v.pause();
 }
 
 function seekBy(s){
-  const v=$("video");
+  var v = $("video");
   if(!v.duration) return;
-  v.currentTime=Math.max(0,Math.min(v.duration, v.currentTime+s));
+  v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + s));
   
-  // Vizuální TV ukazatel přetočení
   if(s < 0) {
     $("seekLeft").style.display = "block";
     clearTimeout(seekTimerLeft);
-    seekTimerLeft = setTimeout(() => $("seekLeft").style.display = "none", 800);
+    seekTimerLeft = setTimeout(function(){ $("seekLeft").style.display = "none"; }, 800);
   } else {
     $("seekRight").style.display = "block";
     clearTimeout(seekTimerRight);
-    seekTimerRight = setTimeout(() => $("seekRight").style.display = "none", 800);
+    seekTimerRight = setTimeout(function(){ $("seekRight").style.display = "none"; }, 800);
   }
   resetUIHide();
 }
 
 function toggleMute(){
-  const v=$("video");
-  v.muted=!v.muted;
-  $("muteBtn").textContent=v.muted?"🔇":"🔊";
+  var v = $("video");
+  v.muted = !v.muted;
+  $("muteBtn").textContent = v.muted ? "🔇" : "🔊";
 }
 
 function toggleFullscreen(){
-  const el=$("player");
+  var el = $("player");
   if(document.fullscreenElement) document.exitFullscreen();
-  else el.requestFullscreen?.();
+  else if(el.requestFullscreen) el.requestFullscreen();
 }
 
 function fmt(s){
   if(!isFinite(s) || isNaN(s)) return "0:00";
-  s=Math.max(0,Math.floor(s));
-  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+  s = Math.max(0, Math.floor(s));
+  return Math.floor(s/60) + ":" + String(s%60 < 10 ? "0" + (s%60) : s%60);
 }
 
-/* TIMELINE & AKTUALIZACE ČASU */
-$("video").addEventListener("timeupdate", () => {
-  let v = $("video");
+$("video").addEventListener("timeupdate", function(){
+  var v = $("video");
   if (!v.duration) return;
 
   $("progressBar").style.width = (v.currentTime / v.duration * 100) + "%";
-  $("time").textContent = `${fmt(v.currentTime)} / ${fmt(v.duration)}`;
+  $("time").textContent = fmt(v.currentTime) + " / " + fmt(v.duration);
 
-  const timeLeft = v.duration - v.currentTime;
-  const nextEpNum = current + 1;
-  const hasNextEpisode = !!links[String(nextEpNum)];
+  var timeLeft = v.duration - v.currentTime;
+  var nextEpNum = current + 1;
+  var hasNextEpisode = !!links[String(nextEpNum)];
 
   if (hasNextEpisode && !nextPromptDismissed && timeLeft <= SKIP_THRESHOLD && timeLeft > 0) {
-    $("nextEpTitle").textContent = `Epizoda ${nextEpNum}`;
+    $("nextEpTitle").textContent = "Epizoda " + nextEpNum;
     $("nextCountdown").textContent = Math.ceil(timeLeft);
-    $("nextBtnFill").style.width = `${((SKIP_THRESHOLD - timeLeft) / SKIP_THRESHOLD) * 100}%`;
+    $("nextBtnFill").style.width = (((SKIP_THRESHOLD - timeLeft) / SKIP_THRESHOLD) * 100) + "%";
     
-    if(!$("nextEpCard").classList.contains("show")) {
-      $("nextEpCard").classList.add("show");
-      $("nextEpBtn").focus(); // Dáme focus přímo na skip tlačítko pro TV ovladač
+    if($("nextEpCard").className.indexOf("show") === -1) {
+      $("nextEpCard").className = "next-ep-card show";
+      $("nextEpBtn").focus();
     }
   } else {
     hideNextPrompt();
   }
 });
 
-$("video").addEventListener("ended", () => {
+$("video").addEventListener("ended", function(){
   if (links[String(current + 1)]) playNextEpisode();
 });
 
-$("video").addEventListener("play",()=>{$("playBtn").textContent="Ⅱ"});
-$("video").addEventListener("pause",()=>{$("playBtn").textContent="▶"});
+$("video").addEventListener("play", function(){ $("playBtn").textContent = "Ⅱ"; });
+$("video").addEventListener("pause", function(){ $("playBtn").textContent = "▶"; });
 
-/* D-PAD SPATIAL NAVIGATION (Pro ovladače Smart TV) */
-document.addEventListener("keydown", e => {
-  const isPlayerOpen = $("player").classList.contains("open");
+document.addEventListener("keydown", function(e){
+  var isPlayerOpen = $("player").className.indexOf("open") !== -1;
 
-  // Klávesa Zpět na ovladači (Backspace nebo Escape)
   if (e.key === "Escape" || e.key === "Backspace") {
     if(isPlayerOpen) {
       e.preventDefault();
       closePlayer();
-    } else if($("adminModal").classList.contains("open")) {
+    } else if($("adminModal").className.indexOf("open") !== -1) {
       e.preventDefault();
       closeAdmin();
     }
     return;
   }
 
-  // Když běží přehrávač
   if (isPlayerOpen) {
     resetUIHide();
 
-    // Rychlé přetáčení šipkami vlevo / vpravo, pokud uživatel zrovna nemíří na konkrétní tlačítko
     if (e.key === "ArrowLeft" && document.activeElement === $("playBtn")) {
       seekBy(-10);
     } else if (e.key === "ArrowRight" && document.activeElement === $("playBtn")) {
       seekBy(10);
     } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-      // Zobrazení UI lišty při stisku šipek nahoru/dolů
-      $("player").classList.remove("hide-ui");
+      $("player").className = "player open";
     } else if (e.key === " " || e.key === "MediaPlayPause") {
       e.preventDefault();
       togglePlay();
@@ -423,18 +415,21 @@ document.addEventListener("keydown", e => {
 
 function resetUIHide(){
   clearTimeout(hideTimer);
-  $("player").classList.remove("hide-ui");
+  $("player").className = "player open";
   if(!$("video").paused){
-    hideTimer = setTimeout(()=>{
-      // Po 3.5 sekundách neaktivity schovat rozhraní
+    hideTimer = setTimeout(function(){
       if(document.activeElement !== $("closePlayerBtn")) {
-        $("player").classList.add("hide-ui");
+        $("player").className = "player open hide-ui";
       }
     }, 3500);
   }
 }
 
-function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1800)}
+function toast(t){
+  $("toast").textContent = t;
+  $("toast").style.display = "block";
+  setTimeout(function(){ $("toast").style.display = "none"; }, 1800);
+}
 
 loadAutoJSON();
 </script>
