@@ -178,7 +178,7 @@ video{width:100%;height:100%;object-fit:contain}
 <div id="adminModal" class="modal" onclick="if(event.target===this)closeAdmin()">
   <div class="panel">
     <h2>Správa odkazů</h2>
-    <p class="hint">Odkazy se automaticky berou ze souboru <b>episodes.json</b> na GitHubu. Tady si je můžeš narychlo vyzkoušet nebo zkopírovat.</p>
+    <p class="hint">Odkazy se automaticky berou ze souboru <b>episodes.json</b> na GitHubu.</p>
     <div class="formrow"><label>Epizoda</label><select id="episodeSelect"></select></div>
     <div class="formrow"><label>Odkaz</label><input id="urlInput" placeholder="https://example.com/video.mp4"></div>
     <div class="actions">
@@ -192,7 +192,6 @@ video{width:100%;height:100%;object-fit:contain}
 
 <div id="player" class="player">
   <div class="video-wrap" id="videoWrap">
-    
     <div class="player-top">
       <div class="now" id="now"></div>
       <button class="ctrl close" onclick="closePlayer()" title="Zavřít">✕</button>
@@ -200,7 +199,6 @@ video{width:100%;height:100%;object-fit:contain}
 
     <video id="video" playsinline preload="metadata"></video>
 
-    <!-- Netflix Auto-Skip Widget -->
     <div class="next-ep-card" id="nextEpCard">
       <div class="next-ep-info">
         <span class="label">Další epizoda</span>
@@ -245,7 +243,6 @@ let nextPromptDismissed = false;
 
 const $=id=>document.getElementById(id);
 
-// AUTOMATICKÉ NAČTENÍ SOUBORU episodes.json Z GITHUB (Vždy čerstvé data)
 async function loadAutoJSON() {
   try {
     const res = await fetch('episodes.json?v=' + Date.now());
@@ -261,12 +258,16 @@ async function loadAutoJSON() {
 }
 
 function render(){
-  $("episodes").innerHTML=EPISODES.map(e=>`
+  $("episodes").innerHTML=EPISODES.map(e=>{
+    const key = String(e.n);
+    const hasLink = !!(links[key] && links[key].trim());
+    return `
     <article class="card">
       <div class="ep">Epizoda ${e.n}</div>
       <h3>${e.title}</h3>
-      <button class="play" onclick="playEpisode(${e.n})">${links[e.n]?"▶ Přehrát":"○ Bez odkazu"}</button>
-    </article>`).join("");
+      <button class="play" onclick="playEpisode(${e.n})">${hasLink ? "▶ Přehrát" : "○ Bez odkazu"}</button>
+    </article>`;
+  }).join("");
 }
 
 function openAdmin(){
@@ -276,17 +277,22 @@ function openAdmin(){
   loadSelected(); renderSaved();
 }
 function closeAdmin(){$("adminModal").classList.remove("open")}
-function loadSelected(){ $("urlInput").value=links[$("episodeSelect").value]||""; }
+function loadSelected(){ 
+  const key = String($("episodeSelect").value);
+  $("urlInput").value = links[key] || ""; 
+}
 
 function saveLink(){
-  const n=$("episodeSelect").value, url=$("urlInput").value.trim();
+  const n = String($("episodeSelect").value);
+  const url = $("urlInput").value.trim();
   if(!url){toast("Vlož nejdřív odkaz.");return}
-  links[n]=url;
+  links[n] = url;
   render(); renderSaved(); toast(`Dočasně uloženo pro tuto relaci.`);
 }
 
 function removeLink(){
-  const n=$("episodeSelect").value; delete links[n];
+  const n = String($("episodeSelect").value); 
+  delete links[n];
   $("urlInput").value="";
   render(); renderSaved(); toast(`Odkaz odstraněn.`);
 }
@@ -300,31 +306,34 @@ function copyToClipboard(textToCopy, labelText){
 }
 
 function renderSaved(){
-  $("saved").innerHTML="<b>Aktuálně uložené odkazy (kliknutím zkopíruješ)</b>"+EPISODES.filter(e=>links[e.n]).map(e=>
-    `<div class="savedrow">
-      <strong onclick="copyToClipboard('E${e.n}: ${escapeHtml(links[e.n])}', 'E${e.n}')" title="Zkopírovat vše">E${e.n}</strong>
-      <span onclick="copyToClipboard('${escapeHtml(links[e.n])}', '${escapeHtml(links[e.n])}')" title="Zkopírovat odkaz">${escapeHtml(links[e.n])}</span>
-    </div>`).join("")+
-    (!Object.keys(links).length?"<p class='hint'>Zatím není uložený žádný odkaz.</p>":"");
+  $("saved").innerHTML="<b>Aktuálně uložené odkazy (kliknutím zkopíruješ)</b>"+EPISODES.filter(e=>links[String(e.n)]).map(e=>{
+    const key = String(e.n);
+    return `<div class="savedrow">
+      <strong onclick="copyToClipboard('E${e.n}: ${escapeHtml(links[key])}', 'E${e.n}')" title="Zkopírovat vše">E${e.n}</strong>
+      <span onclick="copyToClipboard('${escapeHtml(links[key])}', '${escapeHtml(links[key])}')" title="Zkopírovat odkaz">${escapeHtml(links[key])}</span>
+    </div>`;
+  }).join("")+
+  (!Object.keys(links).length?"<p class='hint'>Zatím není uložený žádný odkaz.</p>":"");
 }
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
-/* PŘEHRÁVAČ LOGIKA */
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
 function playEpisode(n){
-  if(!links[n]){openAdmin(); $("episodeSelect").value=n; loadSelected(); toast(`Epizoda ${n} zatím nemá odkaz.`); return}
+  const key = String(n);
+  if(!links[key]){openAdmin(); $("episodeSelect").value=n; loadSelected(); toast(`Epizoda ${n} zatím nemá odkaz.`); return}
   current=n; 
   nextPromptDismissed = false;
   hideNextPrompt();
 
   $("now").textContent=`Epizoda ${n}`;
-  $("video").src=links[n]; 
+  $("video").src=links[key]; 
   $("player").classList.add("open");
   $("video").play().catch(()=>{});
   resetUIHide();
 }
 
 function playNextEpisode(){
-  if(links[current + 1]){
+  if(links[String(current + 1)]){
     playEpisode(current + 1);
   }
 }
@@ -375,7 +384,6 @@ function fmt(s){
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 }
 
-/* Single click = Pause/Play, Double click = Fullscreen */
 $("videoWrap").addEventListener("click", (e) => {
   if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card')) return;
 
@@ -393,7 +401,6 @@ $("videoWrap").addEventListener("click", (e) => {
   }
 });
 
-/* Timeline Hover a Drag Seek */
 const pContainer = $("progressContainer");
 const tooltip = $("tooltip");
 
@@ -428,7 +435,6 @@ window.addEventListener("mouseup", () => {
   }
 });
 
-/* Sledování času a vyvolání 10s Auto-skip tlačítka */
 $("video").addEventListener("timeupdate", () => {
   let v = $("video");
   if (!v.duration) return;
@@ -440,7 +446,7 @@ $("video").addEventListener("timeupdate", () => {
 
   const timeLeft = v.duration - v.currentTime;
   const nextEpNum = current + 1;
-  const hasNextEpisode = !!links[nextEpNum];
+  const hasNextEpisode = !!links[String(nextEpNum)];
 
   if (hasNextEpisode && !nextPromptDismissed && timeLeft <= SKIP_THRESHOLD && timeLeft > 0) {
     $("nextEpTitle").textContent = `Epizoda ${nextEpNum}`;
@@ -455,9 +461,8 @@ $("video").addEventListener("timeupdate", () => {
   }
 });
 
-/* Automatický přechod po skončení videa */
 $("video").addEventListener("ended", () => {
-  if (links[current + 1]) {
+  if (links[String(current + 1)]) {
     playNextEpisode();
   }
 });
@@ -465,7 +470,6 @@ $("video").addEventListener("ended", () => {
 $("video").addEventListener("play",()=>{$("playBtn").textContent="Ⅱ"});
 $("video").addEventListener("pause",()=>{$("playBtn").textContent="▶"});
 
-/* Automatické schovávání lišt a kurzoru mysi */
 $("player").addEventListener("mousemove", resetUIHide);
 
 function resetUIHide(){
@@ -478,7 +482,6 @@ function resetUIHide(){
   }
 }
 
-/* Klávesové zkratky */
 document.addEventListener("keydown",e=>{
  if(!$("player").classList.contains("open")) return;
  if(e.key===" "){ e.preventDefault(); togglePlay(); }
@@ -492,7 +495,6 @@ document.addEventListener("keydown",e=>{
 
 function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1800)}
 
-// Krok 1 při spuštění: Automaticky načíst ze souboru episodes.json
 loadAutoJSON();
 </script>
 </body>
