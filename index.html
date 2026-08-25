@@ -5,106 +5,415 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Přehrávač seriálů</title>
 <style>
+:root{
+  --bg:#070707; --panel:#111; --text:#f2f2f2;
+  --muted:#8f8f8f; --red:#a50909; --red2:#e51a1a; --line:#292929;
+}
 *{box-sizing:border-box}
-body{margin:0;padding:20px;background:#050505;color:#fff;font-family:sans-serif}
-h1{margin:0 0 15px 0;font-size:28px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:25px}
-.card{background:#181818;border:2px solid #333;border-radius:6px;padding:12px;text-align:center}
-.card.has-link{border-color:#a50909}
-button{background:#a50909;color:#fff;border:0;padding:10px 14px;border-radius:4px;font-weight:bold;cursor:pointer;width:100%;font-size:14px;margin-top:8px}
-button:disabled{background:#333;color:#777;cursor:not-allowed}
-button:focus{outline:3px solid #fff;background:#e51a1a}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;user-select:none;overflow-x:hidden}
+body{min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
 
-/* PŘEHRÁVAČ BOX - JEDNODUCHÝ A VIDITELNÝ */
-#playerBox{display:none;background:#111;border:2px solid #a50909;border-radius:8px;padding:15px;margin-top:15px}
-#playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-#epTitle{font-size:20px;font-weight:bold;color:#fff}
-.big-btn{width:auto;padding:8px 16px;margin:0}
-video{width:100%;max-height:70vh;background:#000;margin-top:10px;display:block}
+.hero{
+  padding:40px 6vw 20px; display:flex; align-items:flex-end;
+  background: radial-gradient(circle at 72% 40%, rgba(160,0,0,.15), transparent 60%), #070707;
+  border-bottom: 1px solid var(--line);
+}
+.brand{font-weight:900;letter-spacing:.16em;font-size:13px;color:#c40000}
+.hero h1{font-size:clamp(36px,6vw,72px);line-height:1;margin:12px 0;text-transform:uppercase;letter-spacing:-.03em}
+.badge{display:inline-block;background:#a50909;padding:5px 9px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}
+.container{width:min(1180px,88vw);margin:20px auto}
+.section-title{font-size:21px;margin:25px 0 14px}
+
+.episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding-bottom:60px}
+.card{
+  background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid var(--line);
+  border-radius:9px;padding:18px;min-height:155px;transition:.18s;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.card:hover, .card:focus{transform:translateY(-3px);border-color:var(--red2); outline:none}
+.ep{color:#a9a9a9;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.card h3{margin:8px 0 22px;font-size:20px}
+.play{border:0;border-radius:5px;background:#eee;color:#090909;padding:9px 14px;font-weight:800}
+.card:focus .play{background:var(--red2); color:#fff}
+
+.admin{
+  position:fixed;right:18px;bottom:18px;border:1px solid #444;background:#151515;color:#fff;
+  border-radius:999px;padding:12px 16px;z-index:20
+}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;z-index:30;overflow:auto;padding:35px 15px}
+.modal.open{display:block}
+.panel{width:min(780px,100%);margin:auto;background:#101010;border:1px solid #333;border-radius:12px;padding:24px}
+.panel h2{margin-top:0}
+.formrow{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:10px 0}
+input,select{width:100%;background:#080808;color:#fff;border:1px solid #444;border-radius:6px;padding:11px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.action{border:0;border-radius:6px;padding:10px 14px;background:#ddd;color:#111;font-weight:800}
+.action.red{background:var(--red);color:#fff}
+
+/* OVERLAY PŘEHRÁVAČE */
+.player{
+  position:fixed;inset:0;background:#000;z-index:99999;display:none;flex-direction:column;cursor:default;
+}
+.player.open{display:flex}
+.player.hide-ui{cursor:none}
+
+.video-wrap{position:relative;flex:1;min-height:0;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+video{width:100%;height:100%;object-fit:contain}
+
+.player-ui, .player-top {
+  position:absolute; transition:opacity .2s ease, transform .2s ease; z-index:10;
+}
+.player-top {
+  top:0; left:0; right:0; padding:20px 3vw; display:flex; justify-content:space-between; align-items:center;
+  background:linear-gradient(180deg, rgba(0,0,0,0.85), transparent); pointer-events:none;
+}
+.player-top * { pointer-events:auto; }
+.now{font-weight:800; font-size:16px; text-shadow:0 2px 10px #000; color:#fff;}
+
+.player-ui{
+  bottom:0; left:0; right:0; padding:45px 3vw 20px;
+  background:linear-gradient(transparent, rgba(0,0,0,0.95));
+}
+.player.hide-ui .player-ui { opacity:0; transform:translateY(8px); pointer-events:none; }
+.player.hide-ui .player-top { opacity:0; transform:translateY(-8px); pointer-events:none; }
+
+.progress-container{ position:relative; padding:8px 0; cursor:pointer; margin-bottom:10px; }
+.progress{ height:6px; background:#555; border-radius:5px; position:relative; }
+.progress-bar{ height:100%; width:0; background:var(--red2); border-radius:5px; }
+
+.controls{display:flex;align-items:center;gap:8px}
+.ctrl{
+  width:44px;height:40px;border:0;border-radius:6px;background:rgba(30,30,30,.9);color:#fff;font-size:16px
+}
+.ctrl:hover, .ctrl:focus{background:var(--red2); outline:none}
+.time{font-variant-numeric:tabular-nums;color:#ddd;font-size:13px;margin:0 5px}
+.spacer{flex:1}
+
+/* NETFLIX AUTO-SKIP WIDGET */
+.next-ep-card {
+  position: absolute; right: 3vw; bottom: 90px; z-index: 25;
+  background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px; padding: 14px 18px; display: none; align-items: center; gap: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+}
+.next-ep-card.show { display: flex; }
+.next-ep-info { display: flex; flex-direction: column; }
+.next-ep-info .label { font-size: 11px; text-transform: uppercase; color: #aaa; letter-spacing: 0.05em; }
+.next-ep-info .title { font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+.next-btn {
+  position: relative; overflow: hidden; border: 0; border-radius: 5px;
+  background: #333; color: #fff; padding: 10px 18px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+.next-btn-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+  background: var(--red2); opacity: 0.85;
+}
+.next-btn-text { position: relative; z-index: 2; }
+.cancel-next { background: transparent; border: 0; color: #888; font-size: 16px; padding: 4px; }
+
+.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#eee;color:#111;padding:10px 16px;border-radius:7px;display:none;z-index:60;font-weight:700}
 </style>
 </head>
 <body>
 
-<h1>Můj Přehrávač</h1>
+<header class="hero">
+  <div>
+    <div class="brand">KNIHOVNA / SERIÁLY</div>
+    <h1>Můj Přehrávač</h1>
+    <span class="badge">1. Série</span>
+  </div>
+</header>
 
-<div class="grid" id="episodes"></div>
+<main class="container">
+  <h2 class="section-title">Seznam dílů</h2>
+  <div id="episodes" class="episodes"></div>
+</main>
 
-<div id="playerBox">
-  <div id="playerHeader">
-    <span id="epTitle">Epizoda</span>
-    <div>
-      <button class="big-btn" onclick="makeFullscreen()">⛶ Zvětšit na celou obrazovku</button>
-      <button class="big-btn" style="background:#333" onclick="closePlayer()">✕ Zavřít</button>
+<button class="admin" id="adminBtn" onclick="openAdmin()">⚙ Nastavení epizod</button>
+
+<div id="adminModal" class="modal">
+  <div class="panel">
+    <h2>Správa odkazů</h2>
+    <div class="formrow"><label>Epizoda</label><select id="episodeSelect"></select></div>
+    <div class="formrow"><label>Odkaz</label><input id="urlInput" placeholder="https://example.com/video.mp4"></div>
+    <div class="actions">
+      <button class="action red" onclick="saveLink()">Uložit dočasně</button>
+      <button class="action" onclick="closeAdmin()">Zavřít</button>
     </div>
   </div>
-  <!-- Nativní HTML5 video přehrávač se všemi systémovými ovládacími prvky -->
-  <video id="mainVideo" controls playsinline preload="auto"></video>
 </div>
 
-<script>
-var EPISODES = [1,2,3,4,5,6,7,8];
-var links = {};
-var video = document.getElementById("mainVideo");
+<!-- FULLSCREEN PLAYER OVERLAY -->
+<div id="player" class="player">
+  <div class="video-wrap" id="videoWrap">
+    
+    <div class="player-top">
+      <div class="now" id="now"></div>
+      <button class="ctrl close" onclick="closePlayer()" title="Zavřít (Esc)">✕</button>
+    </div>
 
-function loadJSON() {
+    <video id="video" playsinline preload="metadata"></video>
+
+    <!-- Netflix Auto-Skip Karta -->
+    <div class="next-ep-card" id="nextEpCard">
+      <div class="next-ep-info">
+        <span class="label">Další epizoda</span>
+        <span class="title" id="nextEpTitle">Epizoda X</span>
+      </div>
+      <button class="next-btn" id="nextEpBtn" onclick="playNextEpisode()">
+        <div class="next-btn-fill" id="nextBtnFill"></div>
+        <span class="next-btn-text">Přehrát díl <span id="nextCountdown">10</span>s ▶</span>
+      </button>
+      <button class="cancel-next" onclick="dismissNextPrompt()">✕</button>
+    </div>
+    
+    <div class="player-ui" id="playerUI">
+      <div class="progress-container" id="progressContainer">
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl" onclick="seekBy(-10)" title="Zpět 10 s">↶</button>
+        <button class="ctrl" id="playBtn" onclick="togglePlay()">▶</button>
+        <button class="ctrl" onclick="seekBy(10)" title="Dopředu 10 s">↷</button>
+        <span class="time" id="time">0:00 / 0:00</span>
+        <span class="spacer"></span>
+        <button class="ctrl" onclick="toggleMute()" id="muteBtn">🔊</button>
+        <button class="ctrl" onclick="requestFull()" title="Zvětšit přes celou TV">⛶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+var EPISODES = [
+  {n:1, title:"Epizoda 1"}, {n:2, title:"Epizoda 2"},
+  {n:3, title:"Epizoda 3"}, {n:4, title:"Epizoda 4"},
+  {n:5, title:"Epizoda 5"}, {n:6, title:"Epizoda 6"},
+  {n:7, title:"Epizoda 7"}, {n:8, title:"Epizoda 8"}
+];
+
+var TRIGGER_TIME = 50; 
+var COUNTDOWN_DURATION = 10; 
+
+var links = {};
+var current = 0, hideTimer = null, clickTimer = null;
+var nextPromptDismissed = false;
+var countdownStartTime = null;
+
+function $(id){ return document.getElementById(id); }
+
+function loadAutoJSON() {
   fetch('episodes.json?v=' + new Date().getTime())
-    .then(function(r){ return r.ok ? r.json() : {}; })
-    .then(function(d){ links = d || {}; render(); })
+    .then(function(res){ return res.ok ? res.json() : {}; })
+    .then(function(data){ links = data || {}; render(); })
     .catch(function(){ render(); });
 }
 
-function render() {
+function render(){
   var html = "";
-  for (var i = 0; i < EPISODES.length; i++) {
-    var n = EPISODES[i];
-    var key = String(n);
+  for(var i=0; i<EPISODES.length; i++){
+    var e = EPISODES[i];
+    var key = String(e.n);
     var hasLink = links[key] && links[key].trim().length > 0;
+    html += '<article class="card" tabindex="0" onclick="playEpisode(' + e.n + ')">' +
+      '<div class="ep">Epizoda ' + e.n + '</div>' +
+      '<h3>' + e.title + '</h3>' +
+      '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
+    '</article>';
+  }
+  $("episodes").innerHTML = html;
+}
+
+function openAdmin(){
+  $("adminModal").className = "modal open";
+  var html = "";
+  for(var i=0; i<EPISODES.length; i++){
+    html += '<option value="' + EPISODES[i].n + '">Epizoda ' + EPISODES[i].n + '</option>';
+  }
+  $("episodeSelect").innerHTML = html;
+  $("episodeSelect").onchange = loadSelected;
+  loadSelected();
+}
+
+function closeAdmin(){ $("adminModal").className = "modal"; }
+
+function loadSelected(){ 
+  var key = String($("episodeSelect").value);
+  $("urlInput").value = links[key] || ""; 
+}
+
+function saveLink(){
+  var n = String($("episodeSelect").value);
+  var url = $("urlInput").value.trim();
+  if(!url){ toast("Vlož nejdřív odkaz."); return; }
+  links[n] = url;
+  render(); toast("Dočasně uloženo.");
+}
+
+function playEpisode(n){
+  var key = String(n);
+  if(!links[key]){ openAdmin(); $("episodeSelect").value = n; loadSelected(); toast("Epizoda " + n + " nemá odkaz."); return; }
+  
+  current = n; 
+  nextPromptDismissed = false;
+  countdownStartTime = null;
+  hideNextPrompt();
+
+  $("now").textContent = "Epizoda " + n;
+  $("video").src = links[key]; 
+  $("player").className = "player open";
+  
+  $("video").play().catch(function(){});
+  requestFull(); // Pokus o automatické zvětšení
+  resetUIHide();
+}
+
+function requestFull(){
+  var p = $("player");
+  if (p.requestFullscreen) p.requestFullscreen();
+  else if (p.webkitRequestFullscreen) p.webkitRequestFullscreen();
+  else if (p.msRequestFullscreen) p.msRequestFullscreen();
+}
+
+function playNextEpisode(){
+  if(links[String(current + 1)]) playEpisode(current + 1);
+}
+
+function dismissNextPrompt(){
+  nextPromptDismissed = true;
+  hideNextPrompt();
+}
+
+function hideNextPrompt(){ $("nextEpCard").className = "next-ep-card"; }
+
+function closePlayer(){ 
+  $("video").pause(); 
+  $("video").removeAttribute("src"); 
+  $("video").load(); 
+  $("player").className = "player";
+  hideNextPrompt();
+  clearTimeout(hideTimer);
+  if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
+}
+
+function togglePlay(){
+  var v = $("video"); 
+  v.paused ? v.play() : v.pause();
+}
+
+function seekBy(s){
+  var v = $("video");
+  if(!v.duration) return;
+  v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + s));
+  resetUIHide();
+}
+
+function toggleMute(){
+  var v = $("video");
+  v.muted = !v.muted;
+  $("muteBtn").textContent = v.muted ? "🔇" : "🔊";
+}
+
+function fmt(s){
+  if(!isFinite(s) || isNaN(s)) return "0:00";
+  s = Math.max(0, Math.floor(s));
+  return Math.floor(s/60) + ":" + String(s%60 < 10 ? "0" + (s%60) : s%60);
+}
+
+/* SLEDOVÁNÍ ČASU & NETFLIX SKIP (50s / 10s) */
+$("video").addEventListener("timeupdate", function(){
+  var v = $("video");
+  if (!v.duration) return;
+
+  $("progressBar").style.width = (v.currentTime / v.duration * 100) + "%";
+  $("time").textContent = fmt(v.currentTime) + " / " + fmt(v.duration);
+
+  var timeLeft = v.duration - v.currentTime;
+  var nextEpNum = current + 1;
+  var hasNextEpisode = !!links[String(nextEpNum)];
+
+  // Spuštění okna 50 s před koncem
+  if (hasNextEpisode && !nextPromptDismissed && timeLeft <= TRIGGER_TIME && timeLeft > 0) {
+    if (!countdownStartTime) countdownStartTime = v.currentTime;
+
+    var elapsed = v.currentTime - countdownStartTime;
+    var remaining = Math.max(0, COUNTDOWN_DURATION - elapsed);
+
+    $("nextEpTitle").textContent = "Epizoda " + nextEpNum;
+    $("nextCountdown").textContent = Math.ceil(remaining);
     
-    html += '<div class="card ' + (hasLink ? 'has-link' : '') + '">' +
-      '<div><strong>Epizoda ' + n + '</strong></div>' +
-      '<button ' + (hasLink ? '' : 'disabled') + ' onclick="playEp(' + n + ')">' + 
-        (hasLink ? '▶ PŘEHRÁT' : 'Bez odkazu') + 
-      '</button>' +
-    '</div>';
+    // Červené naplňování tlačítka během 10 sekund
+    $("nextBtnFill").style.width = Math.min(100, (elapsed / COUNTDOWN_DURATION) * 100) + "%";
+    $("nextEpCard").className = "next-ep-card show";
+
+    // Automatické přehrání po 10 s
+    if (remaining <= 0) playNextEpisode();
+  } else {
+    hideNextPrompt();
+    if (timeLeft > TRIGGER_TIME) countdownStartTime = null;
   }
-  document.getElementById("episodes").innerHTML = html;
-}
+});
 
-function playEp(n) {
-  var url = links[String(n)];
-  if(!url) return;
-  
-  document.getElementById("epTitle").textContent = "Epizoda " + n;
-  document.getElementById("playerBox").style.display = "block";
-  
-  video.src = url;
-  video.play().catch(function(){});
-  
-  // Sklouznout pohledem na přehrávač
-  document.getElementById("playerBox").scrollIntoView();
-  
-  // Pokus o automatické zvětšení na TV
-  setTimeout(makeFullscreen, 500);
-}
+$("video").addEventListener("ended", function(){
+  if (links[String(current + 1)]) playNextEpisode();
+});
 
-function makeFullscreen() {
-  if (video.requestFullscreen) {
-    video.requestFullscreen();
-  } else if (video.webkitRequestFullscreen) {
-    video.webkitRequestFullscreen();
-  } else if (video.msRequestFullscreen) {
-    video.msRequestFullscreen();
+$("video").addEventListener("play", function(){ $("playBtn").textContent = "Ⅱ"; });
+$("video").addEventListener("pause", function(){ $("playBtn").textContent = "▶"; });
+
+/* KLIKNUTÍ DO OBRAZU A SCHOVÁVÁNÍ UI */
+$("videoWrap").addEventListener("click", function(e){
+  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card')) return;
+  if (clickTimer == null) {
+    clickTimer = setTimeout(function(){
+      clickTimer = null;
+      togglePlay();
+      resetUIHide();
+    }, 250);
+  } else {
+    clearTimeout(clickTimer);
+    clickTimer = null;
+    requestFull();
+    resetUIHide();
+  }
+});
+
+$("player").addEventListener("mousemove", resetUIHide);
+
+function resetUIHide(){
+  clearTimeout(hideTimer);
+  $("player").className = "player open";
+  if(!$("video").paused){
+    hideTimer = setTimeout(function(){
+      $("player").className = "player open hide-ui";
+    }, 3000);
   }
 }
 
-function closePlayer() {
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
-  document.getElementById("playerBox").style.display = "none";
+document.addEventListener("keydown", function(e){
+  if($("player").className.indexOf("open") === -1) return;
+  if(e.key === " ") { e.preventDefault(); togglePlay(); }
+  if(e.key === "ArrowLeft") seekBy(-10);
+  if(e.key === "ArrowRight") seekBy(10);
+  if(e.key === "Escape" || e.key === "Backspace") closePlayer();
+  resetUIHide();
+});
+
+function toast(t){
+  $("toast").textContent = t;
+  $("toast").style.display = "block";
+  setTimeout(function(){ $("toast").style.display = "none"; }, 1800);
 }
 
-loadJSON();
+loadAutoJSON();
 </script>
 </body>
 </html>
