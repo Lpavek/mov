@@ -1,0 +1,26 @@
+name: Promazat epizody ve 3:00
+
+on:
+  schedule:
+    # 01:00 UTC = 03:00 SELČ (letní čas v ČR)
+    # Pro zimní čas (CET) změň na '0 2 * * *'
+    - cron: '0 1 * * *'
+  workflow_dispatch: # Tlačítko pro ruční spuštění v záložce Actions (na test)
+
+jobs:
+  clear-episodes-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Načíst repozitář
+        uses: actions/checkout@v4
+
+      - name: Vyprázdnit episodes.json
+        run: |
+          echo "{}" > episodes.json
+
+      - name: Uložit změny (Commit & Push)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "Auto-clear episodes.json (3:00 AM)" || exit 0
+          git push
