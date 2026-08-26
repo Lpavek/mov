@@ -17,7 +17,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
   outline: none !important;
   border-color: var(--red) !important;
   box-shadow: 0 0 25px rgba(229, 26, 26, 1) !important;
-  transform: scale(1.05);
+  transform: scale(1.03);
   z-index: 5;
 }
 
@@ -26,19 +26,31 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 }
 .brand{font-weight:900;letter-spacing:.15em;font-size:13px;color:var(--red)}
 .hero h1{font-size:36px;margin:8px 0;text-transform:uppercase;letter-spacing:-.02em}
-.badge{display:inline-block;background:var(--red);padding:4px 10px;font-size:12px;font-weight:800;text-transform:uppercase}
 
-.container{width:90vw;margin:20px auto 0}
-.section-title{font-size:22px;margin:0 0 16px 0;font-weight:800}
+.container{width:90vw;margin:20px auto 0; padding-bottom: 100px;}
 
-.episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding-bottom:80px}
+/* SÉRIE - AKORDEON TLAČÍTKA */
+.season-btn {
+  width: 100%; text-align: left; background: #1a1a1a; border: 2px solid var(--line);
+  color: #fff; padding: 22px 25px; font-size: 22px; font-weight: 800; text-transform: uppercase;
+  border-radius: 8px; margin-bottom: 15px; transition: 0.2s; letter-spacing: 2px;
+}
+.season-btn:hover { background: #222; }
+.season-btn:focus { background: #222; }
+
+/* GRID EPIZOD UVNITŘ SÉRIE */
+.season-content {
+  display: none; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; padding-bottom: 30px;
+}
+.season-content.open { display: grid; }
+
 .card{
   background:var(--panel);border:2px solid var(--line);
   border-radius:8px;padding:20px;min-height:150px;transition:transform 0.15s, border-color 0.15s;
   display:flex;flex-direction:column;justify-content:space-between;
 }
-.ep{color:var(--muted);font-size:12px;text-transform:uppercase;font-weight:700}
-.card h3{margin:6px 0 14px;font-size:20px}
+.ep{color:var(--red);font-size:14px;font-weight:900;}
+.card h3{margin:8px 0 14px;font-size:18px; color:#fff;}
 .play{border:0;border-radius:4px;background:#eee;color:#000;padding:10px 16px;font-weight:800;font-size:14px}
 .card:focus .play, .card:focus-within .play { background:var(--red);color:#fff; }
 
@@ -57,7 +69,7 @@ input,select{width:100%;background:#000;color:#fff;border:2px solid #444;border-
 .action{border:0;border-radius:6px;padding:10px 16px;background:#ddd;color:#000;font-weight:800}
 .action.red{background:var(--red);color:#fff}
 
-/* PŘEHRÁVAČ PRO SAMSUNG TV (Skryje zbytek webu a roztáhne se přes celé okno) */
+/* PŘEHRÁVAČ PRO SAMSUNG TV */
 .player{
   display:none;
   position:fixed; top:0; left:0; width:100vw; height:100vh;
@@ -65,7 +77,6 @@ input,select{width:100%;background:#000;color:#fff;border:2px solid #444;border-
 }
 .player.open{ display:flex !important; }
 
-/* Třída pro skrytí pozadí při přehrávání */
 body.in-player .hero,
 body.in-player .container,
 body.in-player .admin {
@@ -127,14 +138,12 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 <header class="hero">
   <div>
     <div class="brand">KNIHOVNA / SERIÁLY</div>
-    <h1>Můj Přehrávač</h1>
-    <span class="badge">1. Série</span>
+    <h1>DEXTER</h1>
   </div>
 </header>
 
-<main class="container">
-  <h2 class="section-title">Vyber epizodu</h2>
-  <div id="episodes" class="episodes"></div>
+<main class="container" id="container">
+  <!-- Akordeon se vygeneruje sem pomocí JS -->
 </main>
 
 <button class="admin" id="adminBtn" tabindex="0" onclick="openAdmin()">⚙ Nastavení</button>
@@ -170,7 +179,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
       </div>
       <button class="next-btn" id="nextEpBtn" tabindex="0" onclick="playNextEpisode()">
         <div class="next-btn-fill" id="nextBtnFill"></div>
-        <span class="next-btn-text">Přehrát díl <span id="nextCountdown">10</span>s ▶</span>
+        <span class="next-btn-text">Přehrát <span id="nextCountdown">10</span>s ▶</span>
       </button>
       <button class="cancel-next" id="cancelNextBtn" tabindex="0" onclick="dismissNextPrompt()">✕</button>
     </div>
@@ -184,7 +193,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
         <span class="time" id="time">0:00 / 0:00</span>
         <span class="spacer"></span>
         <button class="ctrl" id="muteBtn" tabindex="0" onclick="toggleMute()">🔊</button>
-        <button class="ctrl" id="fullBtn" tabindex="0" onclick="forceSamsungFullscreen()">⛶ Obrazovkátko</button>
+        <button class="ctrl" id="fullBtn" tabindex="0" onclick="forceSamsungFullscreen()">⛶ Maximovat</button>
       </div>
     </div>
   </div>
@@ -193,18 +202,33 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 <div id="toast" class="toast"></div>
 
 <script>
+// Data všech 36 epizod
 var EPISODES = [
-  {n:1, title:"Epizoda 1"}, {n:2, title:"Epizoda 2"},
-  {n:3, title:"Epizoda 3"}, {n:4, title:"Epizoda 4"},
-  {n:5, title:"Epizoda 5"}, {n:6, title:"Epizoda 6"},
-  {n:7, title:"Epizoda 7"}, {n:8, title:"Epizoda 8"}
+  {id:1, s:1, e:1, title:"Dexter"}, {id:2, s:1, e:2, title:"Krokodýlí slzy"}, {id:3, s:1, e:3, title:"Nevinné mládí"}, {id:4, s:1, e:4, title:"Pomocná ruka"}, {id:5, s:1, e:5, title:"Americký sen"}, {id:6, s:1, e:6, title:"Vráceno odesílateli"}, {id:7, s:1, e:7, title:"Okruh přátel"}, {id:8, s:1, e:8, title:"Cvokař k večeři"}, {id:9, s:1, e:9, title:"Táta to ví nejlíp"}, {id:10, s:1, e:10, title:"Vidět rudě"}, {id:11, s:1, e:11, title:"S pravdou ven"}, {id:12, s:1, e:12, title:"Volání krve"},
+  {id:13, s:2, e:1, title:"Ono to žije"}, {id:14, s:2, e:2, title:"Až si vydechnu"}, {id:15, s:2, e:3, title:"Nepříjemná lež"}, {id:16, s:2, e:4, title:"Průhledný"}, {id:17, s:2, e:5, title:"Temný ochránce"}, {id:18, s:2, e:6, title:"Dex, lži a video"}, {id:19, s:2, e:7, title:"Noc, kdy se mi rozsvítilo"}, {id:20, s:2, e:8, title:"Svítání"}, {id:21, s:2, e:9, title:"Odpor je marný"}, {id:22, s:2, e:10, title:"Tajemství domu Morganů"}, {id:23, s:2, e:11, title:"Na nejbližší odbočce zahněte vlevo"}, {id:24, s:2, e:12, title:"Britská invaze"},
+  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"}
 ];
+
+var SEASONS = [1, 2, 3];
 var SKIP_THRESHOLD = 10;
 var links = {};
 var current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null, clickTimer = null;
 var nextPromptDismissed = false;
 
 function $(id){ return document.getElementById(id); }
+
+// Zformátování S01E01
+function formatSE(s, e){
+  return "S" + (s < 10 ? "0" + s : s) + "E" + (e < 10 ? "0" + e : e);
+}
+
+// Vyhledání epizody podle ID
+function getEpisode(id) {
+  for(var i=0; i<EPISODES.length; i++) {
+    if(EPISODES[i].id == id) return EPISODES[i];
+  }
+  return null;
+}
 
 function loadAutoJSON() {
   fetch('episodes.json?v=' + new Date().getTime())
@@ -223,21 +247,45 @@ function loadAutoJSON() {
 
 function render(){
   var html = "";
-  for(var i=0; i<EPISODES.length; i++){
-    var e = EPISODES[i];
-    var key = String(e.n);
-    var hasLink = links[key] && links[key].trim().length > 0;
-    html += '<article class="card" tabindex="0" data-ep="' + e.n + '" onclick="playEpisode(' + e.n + ')">' +
-      '<div class="ep">Epizoda ' + e.n + '</div>' +
-      '<h3>' + e.title + '</h3>' +
-      '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
-    '</article>';
+  
+  for(var i=0; i<SEASONS.length; i++) {
+    var s = SEASONS[i];
+    var isOpen = (s === 1) ? " open" : "";
+    
+    html += '<button class="season-btn" tabindex="0" onclick="toggleSeason(' + s + ')">SÉRIE ' + s + '</button>';
+    html += '<div id="season-' + s + '" class="season-content' + isOpen + '">';
+    
+    for(var j=0; j<EPISODES.length; j++){
+      var ep = EPISODES[j];
+      if(ep.s !== s) continue;
+      
+      var key = String(ep.id);
+      var hasLink = links[key] && links[key].trim().length > 0;
+      var seText = formatSE(ep.s, ep.e);
+      
+      html += '<article class="card" tabindex="0" data-ep="' + ep.id + '" onclick="playEpisode(' + ep.id + ')">' +
+        '<div class="ep">' + seText + '</div>' +
+        '<h3>' + ep.title + '</h3>' +
+        '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
+      '</article>';
+    }
+    
+    html += '</div>';
   }
-  $("episodes").innerHTML = html;
+  
+  $("container").innerHTML = html;
+}
 
-  var firstCard = document.querySelector('.card');
-  if(firstCard && !$("player").classList.contains("open")) {
-    firstCard.focus();
+function toggleSeason(s) {
+  for(var i=0; i<SEASONS.length; i++) {
+    var seasonDiv = $("season-" + SEASONS[i]);
+    if (seasonDiv) {
+      if (SEASONS[i] === s) {
+        seasonDiv.className = "season-content open";
+      } else {
+        seasonDiv.className = "season-content";
+      }
+    }
   }
 }
 
@@ -245,7 +293,9 @@ function openAdmin(){
   $("adminModal").className = "modal open";
   var html = "";
   for(var i=0; i<EPISODES.length; i++){
-    html += '<option value="' + EPISODES[i].n + '">Epizoda ' + EPISODES[i].n + '</option>';
+    var ep = EPISODES[i];
+    var titleStr = formatSE(ep.s, ep.e) + " - " + ep.title;
+    html += '<option value="' + ep.id + '">' + titleStr + '</option>';
   }
   $("episodeSelect").innerHTML = html;
   $("episodeSelect").onchange = loadSelected;
@@ -272,20 +322,23 @@ function saveLink(){
   toast("Dočasně uloženo.");
 }
 
-function playEpisode(n){
-  var key = String(n);
+function playEpisode(id){
+  var key = String(id);
+  var ep = getEpisode(id);
+  
   if(!links[key]){ 
     openAdmin(); 
-    $("episodeSelect").value = n; 
+    $("episodeSelect").value = id; 
     loadSelected(); 
-    toast("Epizoda " + n + " nemá odkaz."); 
+    toast(formatSE(ep.s, ep.e) + " nemá odkaz."); 
     return; 
   }
-  current = n; 
+  
+  current = id; 
   nextPromptDismissed = false;
   hideNextPrompt();
 
-  $("now").textContent = "Epizoda " + n;
+  $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
   $("video").src = links[key]; 
   
   // Vynutíme skrytí okolí pro Samsung TV
@@ -309,8 +362,12 @@ function forceSamsungFullscreen(){
 }
 
 function playNextEpisode(){
-  if(links[String(current + 1)]){
-    playEpisode(current + 1);
+  var nextId = current + 1;
+  if(links[String(nextId)]){
+    // Přepneme i akordeon, pokud další díl patří do další série
+    var nextEp = getEpisode(nextId);
+    if (nextEp) toggleSeason(nextEp.s);
+    playEpisode(nextId);
   }
 }
 
@@ -392,11 +449,12 @@ $("video").addEventListener("timeupdate", function(){
   $("time").textContent = fmt(v.currentTime) + " / " + fmt(v.duration);
 
   var timeLeft = v.duration - v.currentTime;
-  var nextEpNum = current + 1;
-  var hasNextEpisode = !!links[String(nextEpNum)];
+  var nextId = current + 1;
+  var nextEp = getEpisode(nextId);
+  var hasNextEpisode = !!links[String(nextId)];
 
-  if (hasNextEpisode && !nextPromptDismissed && timeLeft <= SKIP_THRESHOLD && timeLeft > 0) {
-    $("nextEpTitle").textContent = "Epizoda " + nextEpNum;
+  if (hasNextEpisode && nextEp && !nextPromptDismissed && timeLeft <= SKIP_THRESHOLD && timeLeft > 0) {
+    $("nextEpTitle").textContent = formatSE(nextEp.s, nextEp.e) + " - " + nextEp.title;
     $("nextCountdown").textContent = Math.ceil(timeLeft);
     $("nextBtnFill").style.width = (((SKIP_THRESHOLD - timeLeft) / SKIP_THRESHOLD) * 100) + "%";
     
