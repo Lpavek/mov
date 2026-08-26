@@ -105,6 +105,25 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .seek-indicator.left{left:10%}
 .seek-indicator.right{right:10%}
 
+/* POKRAČOVAT V PŘEHRÁVÁNÍ MODAL (RESUME DIALOG) */
+.resume-card {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(18, 18, 18, 0.96); border: 2px solid var(--red);
+  border-radius: 12px; padding: 25px 30px; display: none; flex-direction: column; align-items: center; gap: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; backdrop-filter: blur(10px); text-align: center;
+}
+.resume-card.show { display: flex; }
+.resume-title { font-size: 20px; font-weight: 800; color: #fff; }
+.resume-time { font-size: 15px; color: #aaa; }
+.resume-time span { color: #fff; font-weight: bold; }
+.resume-actions { display: flex; gap: 15px; margin-top: 5px; }
+.resume-btn {
+  border: 0; border-radius: 6px; padding: 12px 24px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.15s;
+}
+.resume-btn.ok { background: var(--red); color: #fff; }
+.resume-btn.no { background: #333; color: #ccc; }
+.resume-btn:focus, .resume-btn:hover { transform: scale(1.08); }
+
 .player-ui, .player-top{position:absolute;transition:opacity .25s ease, transform .25s ease;z-index:100}
 .player-top{
   top:0;left:0;right:0;padding:25px 4vw;display:flex;justify-content:space-between;align-items:center;
@@ -190,6 +209,16 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
     <div class="seek-indicator left" id="seekLeft">↶ 10s</div>
     <div class="seek-indicator right" id="seekRight">10s ↷</div>
 
+    <!-- RESUME PLAYBACK PROMPT -->
+    <div class="resume-card" id="resumeCard">
+      <div class="resume-title">Pokračovat v přehrávání?</div>
+      <div class="resume-time">Minule jsi skončil v čase <span id="resumeTimeStr">0:00</span></div>
+      <div class="resume-actions">
+        <button class="resume-btn ok" id="resumeOkBtn" tabindex="0" onclick="confirmResume(true)">OK chci</button>
+        <button class="resume-btn no" id="resumeNoBtn" tabindex="0" onclick="confirmResume(false)">✕ nechci</button>
+      </div>
+    </div>
+
     <div class="player-top">
       <div class="now" id="now"></div>
       <button class="ctrl close" id="closePlayerBtn" tabindex="0" onclick="closePlayer()">✕ Zavřít</button>
@@ -233,15 +262,20 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 var EPISODES = [
   {id:1, s:1, e:1, title:"Dexter"}, {id:2, s:1, e:2, title:"Krokodýlí slzy"}, {id:3, s:1, e:3, title:"Nevinné mládí"}, {id:4, s:1, e:4, title:"Pomocná ruka"}, {id:5, s:1, e:5, title:"Americký sen"}, {id:6, s:1, e:6, title:"Vráceno odesílateli"}, {id:7, s:1, e:7, title:"Okruh přátel"}, {id:8, s:1, e:8, title:"Cvokař k večeři"}, {id:9, s:1, e:9, title:"Táta to ví nejlíp"}, {id:10, s:1, e:10, title:"Vidět rudě"}, {id:11, s:1, e:11, title:"S pravdou ven"}, {id:12, s:1, e:12, title:"Volání krve"},
   {id:13, s:2, e:1, title:"Ono to žije"}, {id:14, s:2, e:2, title:"Až si vydechnu"}, {id:15, s:2, e:3, title:"Nepříjemná lež"}, {id:16, s:2, e:4, title:"Průhledný"}, {id:17, s:2, e:5, title:"Temný ochránce"}, {id:18, s:2, e:6, title:"Dex, lži a video"}, {id:19, s:2, e:7, title:"Noc, kdy se mi rozsvítilo"}, {id:20, s:2, e:8, title:"Svítání"}, {id:21, s:2, e:9, title:"Odpor je marný"}, {id:22, s:2, e:10, title:"Tajemství domu Morganů"}, {id:23, s:2, e:11, title:"Na nejbližší odbočce zahněte vlevo"}, {id:24, s:2, e:12, title:"Britská invaze"},
-  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"}
+  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:30, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"}
 ];
 
 var SEASONS = [1, 2, 3];
 var SKIP_THRESHOLD = 10;
+var PROGRESS_KEY = "dexter_saved_progress_v1";
+
 var links = {};
-var current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null, clickTimer = null;
+var savedProgress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+
+var current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null, clickTimer = null, progressSaveTimer = null;
 var isSeeking = false;
 var nextPromptDismissed = false;
+var pendingResumeTime = 0;
 
 function $(id){ return document.getElementById(id); }
 
@@ -374,10 +408,35 @@ function playEpisode(id){
   
   document.body.className = "in-player";
   $("player").className = "player open";
-  
   window.scrollTo(0, 0);
-  $("video").play().catch(function(){});
+
+  // KONTROLA ULOŽENÉHO ČASU
+  var savedTime = savedProgress[key];
+  if (savedTime && savedTime > 5) {
+    pendingResumeTime = savedTime;
+    $("resumeTimeStr").textContent = fmt(savedTime);
+    $("resumeCard").className = "resume-card show";
+    $("resumeOkBtn").focus();
+  } else {
+    pendingResumeTime = 0;
+    $("resumeCard").className = "resume-card";
+    $("video").play().catch(function(){});
+    $("playBtn").focus();
+  }
+
+  resetUIHide();
+}
+
+function confirmResume(shouldResume) {
+  $("resumeCard").className = "resume-card";
+  var v = $("video");
   
+  if (shouldResume && pendingResumeTime > 0) {
+    v.currentTime = pendingResumeTime;
+  }
+  
+  pendingResumeTime = 0;
+  v.play().catch(function(){});
   resetUIHide();
   $("playBtn").focus();
 }
@@ -405,6 +464,8 @@ function dismissNextPrompt(){
 function hideNextPrompt(){ $("nextEpCard").className = "next-ep-card"; }
 
 function closePlayer(){ 
+  saveCurrentProgress(); // Uložíme čas při zavření
+  
   $("video").pause(); 
   $("video").removeAttribute("src"); 
   $("video").load(); 
@@ -412,6 +473,7 @@ function closePlayer(){
   document.body.className = "";
   $("player").className = "player";
   
+  $("resumeCard").className = "resume-card";
   hideNextPrompt();
   clearTimeout(hideTimer);
   
@@ -421,6 +483,19 @@ function closePlayer(){
   
   var activeCard = document.querySelector('.card[data-ep="' + current + '"]');
   if(activeCard) activeCard.focus();
+}
+
+function saveCurrentProgress() {
+  var v = $("video");
+  if (current && v.duration && v.currentTime > 5) {
+    // Pokud chybí méně než 15 sekund do konce, smazat progres
+    if (v.duration - v.currentTime <= 15) {
+      delete savedProgress[String(current)];
+    } else {
+      savedProgress[String(current)] = Math.floor(v.currentTime);
+    }
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(savedProgress));
+  }
 }
 
 function togglePlay(){
@@ -508,7 +583,7 @@ window.addEventListener("mouseup", function(){
   }
 });
 
-/* Sledování videa */
+/* Sledování videa & Průběžné ukládání času */
 $("video").addEventListener("timeupdate", function(){
   var v = $("video");
   if (!v.duration) return;
@@ -517,6 +592,9 @@ $("video").addEventListener("timeupdate", function(){
     $("progressBar").style.width = (v.currentTime / v.duration * 100) + "%";
   }
   $("time").textContent = fmt(v.currentTime) + " / " + fmt(v.duration);
+
+  // Průběžné ukládání času do localStorage
+  saveCurrentProgress();
 
   var timeLeft = v.duration - v.currentTime;
   var nextId = current + 1;
@@ -538,6 +616,9 @@ $("video").addEventListener("timeupdate", function(){
 });
 
 $("video").addEventListener("ended", function(){
+  delete savedProgress[String(current)];
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(savedProgress));
+  
   if (links[String(current + 1)]) playNextEpisode();
 });
 
@@ -546,7 +627,7 @@ $("video").addEventListener("pause", function(){ $("playBtn").textContent = "▶
 
 /* Single click = Play/Pause, Double click = Fullscreen */
 $("videoWrap").addEventListener("click", function(e){
-  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card')) return;
+  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card') || e.target.closest('.resume-card')) return;
   
   if (clickTimer == null) {
     clickTimer = setTimeout(function() {
@@ -580,6 +661,13 @@ document.addEventListener("keydown", function(e){
   }
 
   if (isPlayerOpen) {
+    // Pokud je otevřené okno s dotazem na pokračování
+    if ($("resumeCard").className.indexOf("show") !== -1) {
+      if (e.key === "ArrowLeft") $("resumeOkBtn").focus();
+      if (e.key === "ArrowRight") $("resumeNoBtn").focus();
+      return;
+    }
+
     resetUIHide();
 
     if (e.key === " ") { e.preventDefault(); togglePlay(); }
