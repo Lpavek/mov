@@ -605,7 +605,7 @@ function resetUIHide(){
 function toast(t){
   $("toast").textContent = t;
   $("toast").style.display = "block";
-  setTimeout(function(){ $("toast").style.display = "none", 1800); }
+  setTimeout(function(){ $("toast").style.display = "none"; }, 1800);
 }
 
 loadAutoJSON();
