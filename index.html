@@ -33,16 +33,39 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .season-btn {
   width: 100%; text-align: left; background: #1a1a1a; border: 2px solid var(--line);
   color: #fff; padding: 22px 25px; font-size: 22px; font-weight: 800; text-transform: uppercase;
-  border-radius: 8px; margin-bottom: 15px; transition: 0.2s; letter-spacing: 2px;
+  border-radius: 8px; margin-bottom: 10px; transition: 0.2s; letter-spacing: 2px;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.season-btn:hover { background: #222; }
-.season-btn:focus { background: #222; }
+.season-btn:hover, .season-btn:focus { background: #222; }
+
+/* Indikátor šipky v tlačítku */
+.season-arrow {
+  transition: transform 0.3s ease;
+  font-size: 18px;
+}
+.season-wrapper.open ~ .season-btn .season-arrow {
+  transform: rotate(180deg);
+}
+
+/* SMOOTH ANIMACE PANELŮ */
+.season-wrapper {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease;
+  padding: 0 5px;
+}
+.season-wrapper.open {
+  /* 2500px je dostatečný prostor i pro velký grid s 12 díly */
+  max-height: 2500px;
+  opacity: 1;
+  padding: 10px 5px 25px 5px;
+}
 
 /* GRID EPIZOD UVNITŘ SÉRIE */
 .season-content {
-  display: none; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; padding-bottom: 30px;
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px;
 }
-.season-content.open { display: grid; }
 
 .card{
   background:var(--panel);border:2px solid var(--line);
@@ -143,7 +166,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 </header>
 
 <main class="container" id="container">
-  <!-- Akordeon se vygeneruje sem pomocí JS -->
+  <!-- Akordeon se vygeneruje sem -->
 </main>
 
 <button class="admin" id="adminBtn" tabindex="0" onclick="openAdmin()">⚙ Nastavení</button>
@@ -217,12 +240,10 @@ var nextPromptDismissed = false;
 
 function $(id){ return document.getElementById(id); }
 
-// Zformátování S01E01
 function formatSE(s, e){
   return "S" + (s < 10 ? "0" + s : s) + "E" + (e < 10 ? "0" + e : e);
 }
 
-// Vyhledání epizody podle ID
 function getEpisode(id) {
   for(var i=0; i<EPISODES.length; i++) {
     if(EPISODES[i].id == id) return EPISODES[i];
@@ -250,10 +271,16 @@ function render(){
   
   for(var i=0; i<SEASONS.length; i++) {
     var s = SEASONS[i];
+    // Zjistíme, jestli má být tato série otevřená. Výchozí stav (při startu) je série 1.
     var isOpen = (s === 1) ? " open" : "";
     
-    html += '<button class="season-btn" tabindex="0" onclick="toggleSeason(' + s + ')">SÉRIE ' + s + '</button>';
-    html += '<div id="season-' + s + '" class="season-content' + isOpen + '">';
+    html += '<button class="season-btn" id="btn-season-' + s + '" tabindex="0" onclick="toggleSeason(' + s + ')">' + 
+            '<span>SÉRIE ' + s + '</span>' +
+            '<span class="season-arrow">▼</span>' + 
+            '</button>';
+            
+    html += '<div id="season-' + s + '" class="season-wrapper' + isOpen + '">';
+    html += '<div class="season-content">';
     
     for(var j=0; j<EPISODES.length; j++){
       var ep = EPISODES[j];
@@ -270,22 +297,28 @@ function render(){
       '</article>';
     }
     
-    html += '</div>';
+    html += '</div></div>';
   }
   
   $("container").innerHTML = html;
 }
 
 function toggleSeason(s) {
+  var targetDiv = $("season-" + s);
+  var isCurrentlyOpen = targetDiv.className.indexOf("open") !== -1;
+
+  // Zavřeme úplně všechny panely (odstraníme třídu "open")
   for(var i=0; i<SEASONS.length; i++) {
     var seasonDiv = $("season-" + SEASONS[i]);
     if (seasonDiv) {
-      if (SEASONS[i] === s) {
-        seasonDiv.className = "season-content open";
-      } else {
-        seasonDiv.className = "season-content";
-      }
+      seasonDiv.className = "season-wrapper";
     }
+  }
+
+  // Pokud panel, na který jsme klikli, NEBYL otevřený, tak ho nyní otevřeme.
+  // Pokud otevřený byl, zůstane zavřený (tím pádem jsou teď sbalené všechny).
+  if (!isCurrentlyOpen) {
+    targetDiv.className = "season-wrapper open";
   }
 }
 
@@ -341,7 +374,6 @@ function playEpisode(id){
   $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
   $("video").src = links[key]; 
   
-  // Vynutíme skrytí okolí pro Samsung TV
   document.body.className = "in-player";
   $("player").className = "player open";
   
@@ -364,9 +396,14 @@ function forceSamsungFullscreen(){
 function playNextEpisode(){
   var nextId = current + 1;
   if(links[String(nextId)]){
-    // Přepneme i akordeon, pokud další díl patří do další série
     var nextEp = getEpisode(nextId);
-    if (nextEp) toggleSeason(nextEp.s);
+    // Zabezpečíme, že pokud se přepne na díl z další série, panel se automaticky otevře
+    if (nextEp) {
+      var seasonDiv = $("season-" + nextEp.s);
+      if (seasonDiv && seasonDiv.className.indexOf("open") === -1) {
+        toggleSeason(nextEp.s);
+      }
+    }
     playEpisode(nextId);
   }
 }
@@ -384,7 +421,6 @@ function closePlayer(){
   $("video").removeAttribute("src"); 
   $("video").load(); 
   
-  // Obnovíme zobrazení stránky
   document.body.className = "";
   $("player").className = "player";
   
@@ -423,7 +459,6 @@ function toggleMute(){
   $("muteBtn").textContent = v.muted ? "🔇" : "🔊";
 }
 
-/* Kliknutí do videa */
 $("videoWrap").addEventListener("click", function(e){
   if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card')) return;
   
