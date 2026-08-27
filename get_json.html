@@ -17,6 +17,7 @@ button{cursor:pointer}
 
 .hero{
   padding:30px 5vw 20px; background:#13131a; border-bottom:1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;
 }
 .brand{font-weight:900;letter-spacing:.15em;font-size:12px;color:var(--red)}
 .hero h1{font-size:28px;margin:6px 0;text-transform:uppercase;letter-spacing:-.02em}
@@ -57,7 +58,7 @@ button{cursor:pointer}
 .status{font-size: 12px; font-weight: bold; color: var(--muted);}
 .card.has-link .status { color: #3fb950; }
 
-/* AI CHAT CODE BLOCK STYLE (Podle fotky) */
+/* AI CHAT CODE BLOCK STYLE */
 .code-block-wrapper {
   margin-top: 40px;
 }
@@ -72,15 +73,19 @@ button{cursor:pointer}
   background: #1a1b22; padding: 12px 20px; border-bottom: 1px solid #2d2f3a;
   display: flex; justify-content: space-between; align-items: center; color: #a0a0b0; font-size: 13px; font-weight: 700;
 }
-.copy-btn {
-  background: #252733; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
-  padding: 6px 14px; font-size: 13px; transition: 0.2s; font-weight: 700; display: flex; align-items: center; gap: 6px;
+.code-controls {
+  display: flex; gap: 8px;
 }
-.copy-btn:hover { background: #323545; color: #fff; border-color: #52566e; }
+.btn-tool {
+  background: #252733; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
+  padding: 6px 14px; font-size: 13px; transition: 0.2s; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer;
+}
+.btn-tool:hover { background: #323545; color: #fff; border-color: #52566e; }
+.btn-tool.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
 
 .code-content {
   padding: 20px; margin: 0; color: #e3e3e8; font-family: 'Courier New', Courier, monospace; font-size: 14px;
-  white-space: pre; overflow-x: auto; line-height: 1.6;
+  white-space: pre; overflow-x: auto; line-height: 1.6; min-height: 80px;
 }
 .json-key { color: #f7768e; font-weight: bold; }
 .json-string { color: #9ece6a; word-break: break-all; }
@@ -95,7 +100,7 @@ button{cursor:pointer}
 input,select{width:100%;background:#0d0e12;color:#fff;border:1px solid #333447;border-radius:8px;padding:12px;font-size:14px}
 input:focus,select:focus{outline:none; border-color: var(--red);}
 .actions{display:flex;gap:10px;margin-top:22px; justify-content: flex-end;}
-.action{border:0;border-radius:8px;padding:11px 20px;background:#2d2f3a;color:#fff;font-weight:800; font-size: 14px;}
+.action{border:0;border-radius:8px;padding:11px 20px;background:#2d2f3a;color:#fff;font-weight:800; font-size: 14px; cursor: pointer;}
 .action.red{background:var(--red);color:#fff}
 .action.green{background:#2ea043;color:#fff}
 
@@ -109,20 +114,24 @@ input:focus,select:focus{outline:none; border-color: var(--red);}
     <div class="brand">GENERÁTOR ODKAZŮ</div>
     <h1>DEXTER JSON EXPORT</h1>
   </div>
+  <div>
+    <button class="btn-tool danger" onclick="clearAllData()">🗑 Smazat všechna data</button>
+  </div>
 </header>
 
 <main class="container">
   <div id="container"></div>
 
-  <!-- ŽIVÝ KÓDOVÝ BLOK (JAKO V CHATU GEMINI) -->
+  <!-- ŽIVÝ KÓDOVÝ BLOK -->
   <div class="code-block-wrapper">
     <h2>Vygenerovaný JSON kód</h2>
     <div class="code-block">
       <div class="code-header">
         <span>JSON</span>
-        <button class="copy-btn" onclick="copyJSON()">
-          <span>📋</span> Zkopírovat kód
-        </button>
+        <div class="code-controls">
+          <button class="btn-tool" onclick="clearJSONCode()">🗑 Vymazat kód</button>
+          <button class="btn-tool" onclick="copyJSON()">📋 Zkopírovat kód</button>
+        </div>
       </div>
       <pre class="code-content" id="jsonOutputCode"></pre>
     </div>
@@ -194,7 +203,6 @@ function render() {
   ).join("");
   $("episodeSelect").onchange = loadSelected;
 
-  // Automaticky aktualizuje vygenerovaný kód dole
   updateLiveJSONOutput();
 }
 
@@ -248,7 +256,23 @@ function removeLink() {
   toast("Odkaz odstraněn.");
 }
 
-/* ŽIVÝ GENERÁTOR KÓDU DO OKNA */
+/* VYČIŠTĚNÍ POUZE ZOBRAZENÉHO KÓDU */
+function clearJSONCode() {
+  $("jsonOutputCode").innerHTML = '<span class="json-bracket">{\n}</span>';
+  toast("Kód vymazán.");
+}
+
+/* SMAZÁNÍ VŠECH ULOŽENÝCH DAT A ODKAZŮ */
+function clearAllData() {
+  if (confirm("Opravdu chceš smazat úplně všechny odkazované epizody?")) {
+    links = {};
+    localStorage.removeItem(KEY);
+    render();
+    toast("Všechna data byla smazána.");
+  }
+}
+
+/* ŽIVÝ GENERÁTOR KÓDU */
 function updateLiveJSONOutput() {
   const keys = Object.keys(links);
   
@@ -257,7 +281,6 @@ function updateLiveJSONOutput() {
     return;
   }
 
-  // Seřadíme klíče numericky
   keys.sort((a, b) => Number(a) - Number(b));
 
   let html = '<span class="json-bracket">{\n</span>';
@@ -282,7 +305,6 @@ function copyJSON() {
     return;
   }
   
-  // Vytvoříme seřazený čistý JSON pro schránku
   const cleanObject = {};
   keys.sort((a, b) => Number(a) - Number(b)).forEach(k => cleanObject[k] = links[k]);
   
