@@ -194,7 +194,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
     <h1>DEXTER</h1>
   </div>
   <div>
-    <!-- ODKAZ NA DRUHÝ SOUBOR (Změň název souboru, pokud se jmenuje např. get_json.html) -->
     <a href="get_json" class="json-link-btn" title="Otevřít JSON Generátor">
       <span>📋</span> JSON Generator
     </a>
@@ -282,6 +281,7 @@ var EPISODES = [
 var SEASONS = [1, 2, 3];
 var SKIP_THRESHOLD = 10;
 var PROGRESS_KEY = "dexter_saved_progress_v1";
+var LAST_SEASON_KEY = "dexter_last_opened_season";
 
 var links = {};
 var savedProgress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
@@ -321,9 +321,12 @@ function loadAutoJSON() {
 
 function render(){
   var html = "";
+  var lastSeason = localStorage.getItem(LAST_SEASON_KEY);
+
   for(var i=0; i<SEASONS.length; i++) {
     var s = SEASONS[i];
-    var isOpen = (s === 1) ? " open" : "";
+    // Otevře se jen ta série, která je uložená v paměti. Pokud není žádná, zůstanou sbalené všechny.
+    var isOpen = (String(s) === String(lastSeason)) ? " open" : "";
     
     html += '<button class="season-btn" id="btn-season-' + s + '" tabindex="0" onclick="toggleSeason(' + s + ')">' + 
             '<span>SÉRIE ' + s + '</span>' +
@@ -365,6 +368,9 @@ function toggleSeason(s) {
 
   if (!isCurrentlyOpen) {
     targetDiv.className = "season-wrapper open";
+    localStorage.setItem(LAST_SEASON_KEY, String(s));
+  } else {
+    localStorage.removeItem(LAST_SEASON_KEY);
   }
 }
 
