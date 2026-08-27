@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Export Studio</title>
+<style>
+:root{
+  --bg:#0e0e11; --panel:#17171e; --text:#e3e3e8;
+  --muted:#8e8e99; --red:#e51a1a; --line:#262633;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;}
+body{min-height:100vh; padding-bottom: 80px;}
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+.hero{
+  padding:30px 5vw 20px; background:#13131a; border-bottom:1px solid var(--line);
+}
+.brand{font-weight:900;letter-spacing:.15em;font-size:12px;color:var(--red)}
+.hero h1{font-size:28px;margin:6px 0;text-transform:uppercase;letter-spacing:-.02em}
+
+.container{width:90vw;max-width: 1200px; margin:25px auto 0;}
+
+/* AKORDEON */
+.season-btn {
+  width: 100%; text-align: left; background: #181820; border: 1px solid var(--line);
+  color: #fff; padding: 16px 20px; font-size: 18px; font-weight: 800; text-transform: uppercase;
+  border-radius: 10px; margin-bottom: 10px; transition: 0.2s;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.season-btn:hover { background: #20202b; border-color: #3b3b4f; }
+.season-arrow { transition: transform 0.3s ease; font-size: 14px; color: var(--muted); }
+.season-wrapper.open ~ .season-btn .season-arrow { transform: rotate(180deg); }
+
+.season-wrapper {
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
+  padding: 0 5px;
+}
+.season-wrapper.open { max-height: 2500px; opacity: 1; padding: 10px 5px 20px 5px; }
+
+/* GRID EPIZOD */
+.season-content {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 12px;
+}
+.card{
+  background:var(--panel);border:1px solid var(--line); cursor:pointer;
+  border-radius:10px;padding:16px;transition:0.15s;
+  display:flex;flex-direction:column;justify-content:space-between; min-height: 100px;
+}
+.card:hover { border-color: #4f4f66; background: #1e1e28; }
+.card.has-link { border-color: #2ea043; background: rgba(46, 160, 67, 0.08); }
+.ep{color:var(--red);font-size:12px;font-weight:900;}
+.card h3{margin:4px 0 10px;font-size:15px; color:#fff;}
+.status{font-size: 12px; font-weight: bold; color: var(--muted);}
+.card.has-link .status { color: #3fb950; }
+
+/* AI CHAT CODE BLOCK STYLE (Podle fotky) */
+.code-block-wrapper {
+  margin-top: 40px;
+}
+.code-block-wrapper h2 {
+  font-size: 18px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.code-block {
+  background: #121318; border: 1px solid #2d2f3a; border-radius: 14px;
+  overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.code-header {
+  background: #1a1b22; padding: 12px 20px; border-bottom: 1px solid #2d2f3a;
+  display: flex; justify-content: space-between; align-items: center; color: #a0a0b0; font-size: 13px; font-weight: 700;
+}
+.copy-btn {
+  background: #252733; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
+  padding: 6px 14px; font-size: 13px; transition: 0.2s; font-weight: 700; display: flex; align-items: center; gap: 6px;
+}
+.copy-btn:hover { background: #323545; color: #fff; border-color: #52566e; }
+
+.code-content {
+  padding: 20px; margin: 0; color: #e3e3e8; font-family: 'Courier New', Courier, monospace; font-size: 14px;
+  white-space: pre; overflow-x: auto; line-height: 1.6;
+}
+.json-key { color: #f7768e; font-weight: bold; }
+.json-string { color: #9ece6a; word-break: break-all; }
+.json-bracket { color: #7aa2f7; }
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;z-index:30;padding:20px;align-items:center;justify-content:center;}
+.modal.open{display:flex}
+.panel{width:min(600px,100%);background:#16171f;border:1px solid #333447;border-radius:14px;padding:25px}
+.panel h3{margin-top:0; font-size: 20px;}
+.formrow{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin:16px 0}
+input,select{width:100%;background:#0d0e12;color:#fff;border:1px solid #333447;border-radius:8px;padding:12px;font-size:14px}
+input:focus,select:focus{outline:none; border-color: var(--red);}
+.actions{display:flex;gap:10px;margin-top:22px; justify-content: flex-end;}
+.action{border:0;border-radius:8px;padding:11px 20px;background:#2d2f3a;color:#fff;font-weight:800; font-size: 14px;}
+.action.red{background:var(--red);color:#fff}
+.action.green{background:#2ea043;color:#fff}
+
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#fff;color:#000;padding:12px 24px;border-radius:8px;display:none;z-index:60;font-weight:800; box-shadow: 0 4px 15px rgba(0,0,0,0.4);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <div class="brand">GENERÁTOR ODKAZŮ</div>
+    <h1>DEXTER JSON EXPORT</h1>
+  </div>
+</header>
+
+<main class="container">
+  <div id="container"></div>
+
+  <!-- ŽIVÝ KÓDOVÝ BLOK (JAKO V CHATU GEMINI) -->
+  <div class="code-block-wrapper">
+    <h2>Vygenerovaný JSON kód</h2>
+    <div class="code-block">
+      <div class="code-header">
+        <span>JSON</span>
+        <button class="copy-btn" onclick="copyJSON()">
+          <span>📋</span> Zkopírovat kód
+        </button>
+      </div>
+      <pre class="code-content" id="jsonOutputCode"></pre>
+    </div>
+  </div>
+</main>
+
+<div id="adminModal" class="modal" onclick="if(event.target===this)closeAdmin()">
+  <div class="panel">
+    <h3 id="modalTitle">Úprava epizody</h3>
+    <div class="formrow"><label>Epizoda</label><select id="episodeSelect"></select></div>
+    <div class="formrow"><label>Odkaz</label><input id="urlInput" placeholder="Vlož https://...mp4"></div>
+    <div class="actions">
+      <button class="action green" onclick="saveLink()">Uložit</button>
+      <button class="action red" onclick="removeLink()">Smazat odkaz</button>
+      <button class="action" onclick="closeAdmin()">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const EPISODES = [
+  {id:1, s:1, e:1, title:"Dexter"}, {id:2, s:1, e:2, title:"Krokodýlí slzy"}, {id:3, s:1, e:3, title:"Nevinné mládí"}, {id:4, s:1, e:4, title:"Pomocná ruka"}, {id:5, s:1, e:5, title:"Americký sen"}, {id:6, s:1, e:6, title:"Vráceno odesílateli"}, {id:7, s:1, e:7, title:"Okruh přátel"}, {id:8, s:1, e:8, title:"Cvokař k večeři"}, {id:9, s:1, e:9, title:"Táta to ví nejlíp"}, {id:10, s:1, e:10, title:"Vidět rudě"}, {id:11, s:1, e:11, title:"S pravdou ven"}, {id:12, s:1, e:12, title:"Volání krve"},
+  {id:13, s:2, e:1, title:"Ono to žije"}, {id:14, s:2, e:2, title:"Až si vydechnu"}, {id:15, s:2, e:3, title:"Nepříjemná lež"}, {id:16, s:2, e:4, title:"Průhledný"}, {id:17, s:2, e:5, title:"Temný ochránce"}, {id:18, s:2, e:6, title:"Dex, lži a video"}, {id:19, s:2, e:7, title:"Noc, kdy se mi rozsvítilo"}, {id:20, s:2, e:8, title:"Svítání"}, {id:21, s:2, e:9, title:"Odpor je marný"}, {id:22, s:2, e:10, title:"Tajemství domu Morganů"}, {id:23, s:2, e:11, title:"Na nejbližší odbočce zahněte vlevo"}, {id:24, s:2, e:12, title:"Britská invaze"},
+  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"}
+];
+
+const SEASONS = [1, 2, 3];
+const KEY = "dexter_export_links_v1";
+let links = JSON.parse(localStorage.getItem(KEY) || "{}");
+
+const $ = id => document.getElementById(id);
+
+function formatSE(s, e) {
+  return "S" + (s < 10 ? "0" + s : s) + "E" + (e < 10 ? "0" + e : e);
+}
+
+function render() {
+  let html = "";
+  
+  SEASONS.forEach(s => {
+    html += `<button class="season-btn" onclick="toggleSeason(${s})">
+              <span>SÉRIE ${s}</span><span class="season-arrow">▼</span>
+             </button>`;
+             
+    html += `<div id="season-${s}" class="season-wrapper">`;
+    html += `<div class="season-content">`;
+    
+    EPISODES.filter(ep => ep.s === s).forEach(ep => {
+      const hasLink = !!links[ep.id];
+      const cls = hasLink ? "card has-link" : "card";
+      const statusText = hasLink ? "✔ Odkaz vložen" : "○ Bez odkazu";
+      
+      html += `<article class="${cls}" onclick="openAdmin(${ep.id})">
+        <div class="ep">${formatSE(ep.s, ep.e)}</div>
+        <h3>${ep.title}</h3>
+        <div class="status">${statusText}</div>
+      </article>`;
+    });
+    
+    html += `</div></div>`;
+  });
+  
+  $("container").innerHTML = html;
+  
+  $("episodeSelect").innerHTML = EPISODES.map(ep => 
+    `<option value="${ep.id}">${formatSE(ep.s, ep.e)} - ${ep.title}</option>`
+  ).join("");
+  $("episodeSelect").onchange = loadSelected;
+
+  // Automaticky aktualizuje vygenerovaný kód dole
+  updateLiveJSONOutput();
+}
+
+function toggleSeason(s) {
+  const target = $("season-" + s);
+  const isOpen = target.classList.contains("open");
+  
+  SEASONS.forEach(season => {
+    $("season-" + season).classList.remove("open");
+  });
+
+  if (!isOpen) {
+    target.classList.add("open");
+  }
+}
+
+function openAdmin(epId) {
+  $("adminModal").classList.add("open");
+  $("episodeSelect").value = epId;
+  loadSelected();
+  setTimeout(() => $("urlInput").focus(), 100);
+}
+
+function closeAdmin() {
+  $("adminModal").classList.remove("open");
+}
+
+function loadSelected() { 
+  $("urlInput").value = links[$("episodeSelect").value] || ""; 
+}
+
+function saveLink() {
+  const id = $("episodeSelect").value;
+  const url = $("urlInput").value.trim();
+  
+  if (!url) { toast("Odkaz nemůže být prázdný."); return; }
+  
+  links[id] = url;
+  localStorage.setItem(KEY, JSON.stringify(links));
+  render();
+  closeAdmin();
+  toast("Odkaz uložen.");
+}
+
+function removeLink() {
+  const id = $("episodeSelect").value;
+  delete links[id];
+  localStorage.setItem(KEY, JSON.stringify(links));
+  render();
+  closeAdmin();
+  toast("Odkaz odstraněn.");
+}
+
+/* ŽIVÝ GENERÁTOR KÓDU DO OKNA */
+function updateLiveJSONOutput() {
+  const keys = Object.keys(links);
+  
+  if (keys.length === 0) {
+    $("jsonOutputCode").innerHTML = '<span class="json-bracket">{\n}</span>';
+    return;
+  }
+
+  // Seřadíme klíče numericky
+  keys.sort((a, b) => Number(a) - Number(b));
+
+  let html = '<span class="json-bracket">{\n</span>';
+  keys.forEach((key, index) => {
+    const isLast = index === keys.length - 1;
+    const comma = isLast ? "" : ",";
+    html += `  <span class="json-key">"${key}"</span>: <span class="json-string">"${escapeHtml(links[key])}"</span>${comma}\n`;
+  });
+  html += '<span class="json-bracket">}</span>';
+
+  $("jsonOutputCode").innerHTML = html;
+}
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+function copyJSON() {
+  const keys = Object.keys(links);
+  if (keys.length === 0) {
+    toast("Není co kopírovat, JSON je prázdný.");
+    return;
+  }
+  
+  // Vytvoříme seřazený čistý JSON pro schránku
+  const cleanObject = {};
+  keys.sort((a, b) => Number(a) - Number(b)).forEach(k => cleanObject[k] = links[k]);
+  
+  const textToCopy = JSON.stringify(cleanObject, null, 2);
+  
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    toast("Zkopírováno do schránky!");
+  }).catch(() => {
+    toast("Chyba při kopírování.");
+  });
+}
+
+function toast(t) {
+  $("toast").textContent = t;
+  $("toast").style.display = "block";
+  setTimeout(() => $("toast").style.display = "none", 1800);
+}
+
+render();
+</script>
+</body>
+</html>
