@@ -273,12 +273,25 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 
 <script>
 var EPISODES = [
+  /* 1. Série */
   {id:1, s:1, e:1, title:"Dexter"}, {id:2, s:1, e:2, title:"Krokodýlí slzy"}, {id:3, s:1, e:3, title:"Nevinné mládí"}, {id:4, s:1, e:4, title:"Pomocná ruka"}, {id:5, s:1, e:5, title:"Americký sen"}, {id:6, s:1, e:6, title:"Vráceno odesílateli"}, {id:7, s:1, e:7, title:"Okruh přátel"}, {id:8, s:1, e:8, title:"Cvokař k večeři"}, {id:9, s:1, e:9, title:"Táta to ví nejlíp"}, {id:10, s:1, e:10, title:"Vidět rudě"}, {id:11, s:1, e:11, title:"S pravdou ven"}, {id:12, s:1, e:12, title:"Volání krve"},
+  /* 2. Série */
   {id:13, s:2, e:1, title:"Ono to žije"}, {id:14, s:2, e:2, title:"Až si vydechnu"}, {id:15, s:2, e:3, title:"Nepříjemná lež"}, {id:16, s:2, e:4, title:"Průhledný"}, {id:17, s:2, e:5, title:"Temný ochránce"}, {id:18, s:2, e:6, title:"Dex, lži a video"}, {id:19, s:2, e:7, title:"Noc, kdy se mi rozsvítilo"}, {id:20, s:2, e:8, title:"Svítání"}, {id:21, s:2, e:9, title:"Odpor je marný"}, {id:22, s:2, e:10, title:"Tajemství domu Morganů"}, {id:23, s:2, e:11, title:"Na nejbližší odbočce zahněte vlevo"}, {id:24, s:2, e:12, title:"Britská invaze"},
-  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"}
+  /* 3. Série */
+  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"},
+  /* 4. Série */
+  {id:37, s:4, e:1, title:"Problémového četaře živí práce"}, {id:38, s:4, e:2, title:"Sešup"}, {id:39, s:4, e:3, title:"Olepovat a porcovat"}, {id:40, s:4, e:4, title:"Až po uši"}, {id:41, s:4, e:5, title:"Špinavá práce"}, {id:42, s:4, e:6, title:"Kdo z koho"}, {id:43, s:4, e:7, title:"Rozkol"}, {id:44, s:4, e:8, title:"Ať teče krev"}, {id:45, s:4, e:9, title:"Hladovění"}, {id:46, s:4, e:10, title:"Až na věky"}, {id:47, s:4, e:11, title:"A je po všem"}, {id:48, s:4, e:12, title:"Útěk"},
+  /* 5. Série */
+  {id:49, s:5, e:1, title:"Moje chyba"}, {id:50, s:5, e:2, title:"Až dočista vyčištěno"}, {id:51, s:5, e:3, title:"Pravý náboženský prožitek"}, {id:52, s:5, e:4, title:"Kdo s čím zachází"}, {id:53, s:5, e:5, title:"Poprvé"}, {id:54, s:5, e:6, title:"Nic jako jistota neexistuje"}, {id:55, s:5, e:7, title:"Vezmi si to!"}, {id:56, s:5, e:8, title:"Příprava na cestu"}, {id:57, s:5, e:9, title:"Náctileté město"}, {id:58, s:5, e:10, title:"Na začátku"}, {id:59, s:5, e:11, title:"Chráněný druh"}, {id:50, s:5, e:12, title:"Až dočista zahojeno"},
+  /* 6. Série */
+  {id:61, s:6, e:1, title:"Věci, které se nezmění"}, {id:62, s:6, e:2, title:"Světlo světa"}, {id:63, s:6, e:3, title:"Smokey a zbojník"}, {id:64, s:6, e:4, title:"Oční zub za oční zub"}, {id:65, s:6, e:5, title:"Anděl smrti"}, {id:66, s:6, e:6, title:"Pusťte barabáše"}, {id:67, s:6, e:7, title:"Nebraska"}, {id:68, s:6, e:8, title:"Hřích z opomenutí"}, {id:69, s:6, e:9, title:"Znáte ten pocit?"}, {id:70, s:6, e:10, title:"Ricochet"}, {id:71, s:6, e:11, title:"Svěrací kazajka"}, {id:72, s:6, e:12, title:"A svět skončil"},
+  /* 7. Série */
+  {id:73, s:7, e:1, title:"Ty jsi ten vraždící pošuk?"}, {id:74, s:7, e:2, title:"Rány osudu"}, {id:75, s:7, e:3, title:"Vstíc budoucnosti"}, {id:76, s:7, e:4, title:"Proběhne to hladce"}, {id:77, s:7, e:5, title:"Hluboké vody"}, {id:78, s:7, e:6, title:"Udělej si to sám"}, {id:79, s:7, e:7, title:"Chyba v Chemii"}, {id:78, s:7, e:8, title:"Argentina"}, {id:81, s:7, e:9, title:"Kdo to s tebou táhne"}, {id:82, s:7, e:10, title:"Temné touhy"}, {id:83, s:7, e:11, title:"Obrana rozumných pochybností"}, {id:84, s:7, e:12, title:"Překvapení, hajzle!"},
+  /* 8. Série */
+  {id:85, s:8, e:1, title:"Až na konec světa"}, {id:86, s:8, e:2, title:"Předávkování informacemi"}, {id:87, s:8, e:3, title:"Co trápí Dextera Morgana?"}, {id:88, s:8, e:4, title:"Jizva z minulosti"}, {id:89, s:8, e:5, title:"Ať to rodina neví"}, {id:90, s:8, e:6, title:"Trocha pochybností"}, {id:91, s:8, e:7, title:"Oblečení dělá člověka"}, {id:92, s:8, e:8, title:"Přelud"}, {id:93, s:8, e:9, title:"Vytváření hudby"}, {id:94, s:8, e:10, title:"Sbohem, Miami"}, {id:95, s:8, e:11, title:"Kukaččí vejce"}, {id:96, s:8, e:12, title:"Zapomenuté věci"}
 ];
 
-var SEASONS = [1, 2, 3];
+var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8];
 var SKIP_THRESHOLD = 10;
 var PROGRESS_KEY = "dexter_saved_progress_v1";
 var LAST_SEASON_KEY = "dexter_last_opened_season";
@@ -325,7 +338,6 @@ function render(){
 
   for(var i=0; i<SEASONS.length; i++) {
     var s = SEASONS[i];
-    // Otevře se jen ta série, která je uložená v paměti. Pokud není žádná, zůstanou sbalené všechny.
     var isOpen = (String(s) === String(lastSeason)) ? " open" : "";
     
     html += '<button class="season-btn" id="btn-season-' + s + '" tabindex="0" onclick="toggleSeason(' + s + ')">' + 
