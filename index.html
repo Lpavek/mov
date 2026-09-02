@@ -12,7 +12,6 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;user-select:none;width:100%;height:100%;overflow-x:hidden}
 
-/* TV FOCUS STYLES */
 :focus, .tv-focus {
   outline: none !important;
   border-color: var(--red) !important;
@@ -28,7 +27,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .brand{font-weight:900;letter-spacing:.15em;font-size:13px;color:var(--red)}
 .hero h1{font-size:36px;margin:8px 0;text-transform:uppercase;letter-spacing:-.02em}
 
-/* TLAČÍTKO PRO PŘECHOD NA GENERÁTOR */
 .json-link-btn {
   background: #181820; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
   padding: 8px 16px; font-size: 13px; text-decoration: none; font-weight: 700;
@@ -38,7 +36,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 
 .container{width:90vw;margin:20px auto 0; padding-bottom: 100px;}
 
-/* SÉRIE - AKORDEON TLAČÍTKA */
 .season-btn {
   width: 100%; text-align: left; background: #1a1a1a; border: 2px solid var(--line);
   color: #fff; padding: 22px 25px; font-size: 22px; font-weight: 800; text-transform: uppercase;
@@ -59,7 +56,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
   max-height: 2500px; opacity: 1; padding: 10px 5px 25px 5px;
 }
 
-/* GRID EPIZOD */
 .season-content {
   display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px;
 }
@@ -89,7 +85,6 @@ input,select{width:100%;background:#000;color:#fff;border:2px solid #444;border-
 .action{border:0;border-radius:6px;padding:10px 16px;background:#ddd;color:#000;font-weight:800; cursor:pointer;}
 .action.red{background:var(--red);color:#fff}
 
-/* PŘEHRÁVAČ PRO TV I PC */
 .player{
   display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
   background:#000; z-index:999999; flex-direction:column; cursor:default;
@@ -106,15 +101,22 @@ body.in-player .admin {
 .video-wrap{position:relative;width:100%;height:100%;flex:1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 video{width:100%;height:100%;object-fit:contain;background:#000}
 
-.seek-indicator{
-  position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.8);
-  color:#fff;padding:15px 25px;border-radius:40px;font-size:22px;font-weight:900;
-  border:2px solid var(--red);display:none;z-index:20; pointer-events:none;
+/* VELKÁ TLAČÍTKA PRO KURZOR TV */
+.touch-overlay-controls {
+  position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4vw; pointer-events: none; z-index: 150; transition: opacity 0.25s ease;
 }
-.seek-indicator.left{left:10%}
-.seek-indicator.right{right:10%}
+.player.hide-ui .touch-overlay-controls { opacity: 0; pointer-events: none; }
 
-/* POKRAČOVAT V PŘEHRÁVÁNÍ MODAL (RESUME DIALOG) */
+.big-touch-btn {
+  pointer-events: auto; background: rgba(20, 20, 20, 0.85); border: 2px solid var(--red);
+  color: #fff; width: 100px; height: 100px; border-radius: 50%; font-size: 20px; font-weight: 900;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8); transition: transform 0.15s, background 0.15s;
+}
+.big-touch-btn:hover, .big-touch-btn:focus { transform: scale(1.15); background: var(--red); }
+.big-touch-btn.center { width: 90px; height: 90px; font-size: 28px; }
+
 .resume-card {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   background: rgba(18, 18, 18, 0.96); border: 2px solid var(--red);
@@ -149,7 +151,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .player.hide-ui .player-ui{opacity:0;transform:translateY(15px);pointer-events:none}
 .player.hide-ui .player-top{opacity:0;transform:translateY(-15px);pointer-events:none}
 
-/* TIMELINE PRO PC & TV */
 .progress-container{ position:relative; padding:10px 0; cursor:pointer; margin-bottom:8px; }
 .progress{ height:8px; background:#444; border-radius:4px; position:relative; }
 .progress-bar{ height:100%; width:0; background:var(--red); border-radius:4px; position:relative; }
@@ -220,8 +221,22 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 
 <div id="player" class="player">
   <div class="video-wrap" id="videoWrap">
-    <div class="seek-indicator left" id="seekLeft">↶ 10s</div>
-    <div class="seek-indicator right" id="seekRight">10s ↷</div>
+    
+    <div class="touch-overlay-controls" id="touchControls">
+      <button class="big-touch-btn" onclick="seekBy(-10)" title="-10 sekund">
+        <span>↶</span>
+        <span style="font-size:12px;">-10s</span>
+      </button>
+      
+      <button class="big-touch-btn center" id="bigPlayBtn" onclick="togglePlay()" title="Pauza / Play">
+        ▶
+      </button>
+
+      <button class="big-touch-btn" onclick="seekBy(10)" title="+10 sekund">
+        <span>↷</span>
+        <span style="font-size:12px;">+10s</span>
+      </button>
+    </div>
 
     <div class="resume-card" id="resumeCard">
       <div class="resume-title">Pokračovat v přehrávání?</div>
@@ -301,8 +316,10 @@ var LAST_SEASON_KEY = "dexter_last_opened_season";
 var links = {};
 var savedProgress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
 
-var current = 0, hideTimer = null, seekTimerLeft = null, seekTimerRight = null, clickTimer = null;
+var current = 0, hideTimer = null, clickTimer = null;
 var isSeeking = false;
+var isPerformingSeek = false;
+var pendingSeekTarget = null;
 var nextPromptDismissed = false;
 var pendingResumeTime = 0;
 
@@ -436,10 +453,13 @@ function playEpisode(id){
   
   current = id; 
   nextPromptDismissed = false;
+  isPerformingSeek = false;
+  pendingSeekTarget = null;
   hideNextPrompt();
 
+  var v = $("video");
   $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
-  $("video").src = links[key]; 
+  v.src = links[key]; 
   
   document.body.className = "in-player";
   $("player").className = "player open";
@@ -454,7 +474,7 @@ function playEpisode(id){
   } else {
     pendingResumeTime = 0;
     $("resumeCard").className = "resume-card";
-    $("video").play().catch(function(){});
+    v.play().catch(function(){});
     $("playBtn").focus();
   }
 
@@ -466,13 +486,56 @@ function confirmResume(shouldResume) {
   var v = $("video");
   
   if (shouldResume && pendingResumeTime > 0) {
-    v.currentTime = pendingResumeTime;
+    var target = pendingResumeTime;
+    if (v.readyState >= 1) {
+      applySafeSeek(target);
+    } else {
+      var onMeta = function(){
+        v.removeEventListener("loadedmetadata", onMeta);
+        applySafeSeek(target);
+      };
+      v.addEventListener("loadedmetadata", onMeta);
+    }
+  } else {
+    v.play().catch(function(){});
   }
   
   pendingResumeTime = 0;
-  v.play().catch(function(){});
   resetUIHide();
   $("playBtn").focus();
+}
+
+/* BEZPEČNÉ PŘETÁČENÍ (ZAMEZENÍ ROZPADU ZVUKU) */
+function applySafeSeek(targetTime) {
+  var v = $("video");
+  if (!v.duration) return;
+
+  var clampedTime = Math.max(0, Math.min(v.duration, targetTime));
+
+  if (isPerformingSeek) {
+    pendingSeekTarget = clampedTime;
+    return;
+  }
+
+  isPerformingSeek = true;
+  v.currentTime = clampedTime;
+}
+
+$("video").addEventListener("seeked", function(){
+  isPerformingSeek = false;
+  if (pendingSeekTarget !== null) {
+    var nextTarget = pendingSeekTarget;
+    pendingSeekTarget = null;
+    applySafeSeek(nextTarget);
+  }
+});
+
+function seekBy(s){
+  var v = $("video");
+  if(!v.duration) return;
+  var base = (pendingSeekTarget !== null) ? pendingSeekTarget : v.currentTime;
+  applySafeSeek(base + s);
+  resetUIHide();
 }
 
 function playNextEpisode(){
@@ -500,9 +563,10 @@ function hideNextPrompt(){ $("nextEpCard").className = "next-ep-card"; }
 function closePlayer(){ 
   saveCurrentProgress();
   
-  $("video").pause(); 
-  $("video").removeAttribute("src"); 
-  $("video").load(); 
+  var v = $("video");
+  v.pause(); 
+  v.removeAttribute("src"); 
+  v.load(); 
   
   document.body.className = "";
   $("player").className = "player";
@@ -534,23 +598,6 @@ function saveCurrentProgress() {
 function togglePlay(){
   var v = $("video"); 
   v.paused ? v.play() : v.pause();
-}
-
-function seekBy(s){
-  var v = $("video");
-  if(!v.duration) return;
-  v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + s));
-  
-  if(s < 0) {
-    $("seekLeft").style.display = "block";
-    clearTimeout(seekTimerLeft);
-    seekTimerLeft = setTimeout(function(){ $("seekLeft").style.display = "none"; }, 800);
-  } else {
-    $("seekRight").style.display = "block";
-    clearTimeout(seekTimerRight);
-    seekTimerRight = setTimeout(function(){ $("seekRight").style.display = "none"; }, 800);
-  }
-  resetUIHide();
 }
 
 function toggleMute(){
@@ -587,16 +634,21 @@ function updateSeek(e){
   if(!v.duration) return;
   var rect = pContainer.getBoundingClientRect();
   var pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  if(isSeeking) v.currentTime = pos * v.duration;
   
   tooltip.style.left = (pos * 100) + "%";
   tooltip.textContent = fmt(pos * v.duration);
+
+  if(isSeeking) {
+    $("progressBar").style.width = (pos * 100) + "%";
+  }
 }
 
 pContainer.addEventListener("mouseenter", function(){ tooltip.style.display = "block"; });
 pContainer.addEventListener("mouseleave", function(){ if(!isSeeking) tooltip.style.display = "none"; });
 
 pContainer.addEventListener("mousedown", function(e){
+  var v = $("video");
+  if(!v.duration) return;
   isSeeking = true;
   updateSeek(e);
 });
@@ -609,14 +661,19 @@ window.addEventListener("mousemove", function(e){
   }
 });
 
-window.addEventListener("mouseup", function(){
+window.addEventListener("mouseup", function(e){
   if(isSeeking) {
+    var v = $("video");
+    if(v.duration) {
+      var rect = pContainer.getBoundingClientRect();
+      var pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      applySafeSeek(pos * v.duration);
+    }
     isSeeking = false;
     tooltip.style.display = "none";
   }
 });
 
-/* Sledování videa */
 $("video").addEventListener("timeupdate", function(){
   var v = $("video");
   if (!v.duration) return;
@@ -654,12 +711,18 @@ $("video").addEventListener("ended", function(){
   if (links[String(current + 1)]) playNextEpisode();
 });
 
-$("video").addEventListener("play", function(){ $("playBtn").textContent = "Ⅱ"; });
-$("video").addEventListener("pause", function(){ $("playBtn").textContent = "▶"; });
+$("video").addEventListener("play", function(){ 
+  $("playBtn").textContent = "Ⅱ"; 
+  $("bigPlayBtn").textContent = "Ⅱ"; 
+});
 
-/* Single click = Play/Pause, Double click = Fullscreen */
+$("video").addEventListener("pause", function(){ 
+  $("playBtn").textContent = "▶"; 
+  $("bigPlayBtn").textContent = "▶"; 
+});
+
 $("videoWrap").addEventListener("click", function(e){
-  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card') || e.target.closest('.resume-card')) return;
+  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card') || e.target.closest('.resume-card') || e.target.closest('.touch-overlay-controls')) return;
   
   if (clickTimer == null) {
     clickTimer = setTimeout(function() {
@@ -675,7 +738,6 @@ $("videoWrap").addEventListener("click", function(e){
   }
 });
 
-/* POHYB MYŠÍ & REAKCE NA KLÁVESNICI PC */
 $("player").addEventListener("mousemove", resetUIHide);
 
 document.addEventListener("keydown", function(e){
