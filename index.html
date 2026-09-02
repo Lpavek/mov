@@ -117,6 +117,32 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .big-touch-btn:hover, .big-touch-btn:focus { transform: scale(1.15); background: var(--red); }
 .big-touch-btn.center { width: 90px; height: 90px; font-size: 28px; }
 
+/* NENÁPADNÉ TLAČÍTKO PŘESKOČIT ÚVOD (VLEVO) */
+.skip-intro-btn {
+  position: absolute; left: 4vw; bottom: 100px; z-index: 160;
+  background: rgba(18, 18, 18, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ddd; padding: 10px 18px; border-radius: 6px; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.05em; cursor: pointer; display: none; backdrop-filter: blur(4px);
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s, color 0.2s;
+}
+.skip-intro-btn:hover, .skip-intro-btn:focus {
+  background: rgba(30, 30, 30, 0.9); border-color: #fff; color: #fff;
+}
+.player.hide-ui .skip-intro-btn { opacity: 0; pointer-events: none; }
+
+/* TLAČÍTKO DALŠÍ DÍL (VPRAVO, 50s PŘED KONCEM) */
+.next-ep-btn-clean {
+  position: absolute; right: 4vw; bottom: 100px; z-index: 160;
+  background: rgba(18, 18, 18, 0.85); border: 2px solid var(--red);
+  color: #fff; padding: 12px 22px; border-radius: 6px; font-size: 15px; font-weight: 800;
+  cursor: pointer; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  transition: opacity 0.2s, transform 0.15s, background 0.15s;
+}
+.next-ep-btn-clean:hover, .next-ep-btn-clean:focus {
+  background: var(--red); transform: scale(1.05);
+}
+.player.hide-ui .next-ep-btn-clean { opacity: 0; pointer-events: none; }
+
 .resume-card {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   background: rgba(18, 18, 18, 0.96); border: 2px solid var(--red);
@@ -171,19 +197,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .time{font-variant-numeric:tabular-nums;color:#ddd;font-size:15px;margin:0 8px;font-weight:700}
 .spacer{flex:1}
 
-.next-ep-card{
-  position:absolute;right:4vw;bottom:110px;z-index:25;
-  background:rgba(18,18,18,0.95);border:2px solid var(--red);
-  border-radius:8px;padding:15px 20px;display:none;align-items:center;gap:15px;
-}
-.next-ep-card.show{display:flex}
-.next-ep-info .label{font-size:11px;text-transform:uppercase;color:#aaa;font-weight:700}
-.next-ep-info .title{font-size:16px;font-weight:800;color:#fff;margin-top:2px}
-.next-btn{position:relative;overflow:hidden;border:0;border-radius:5px;background:#333;color:#fff;padding:10px 18px;font-weight:800;font-size:15px; cursor:pointer;}
-.next-btn-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--red);opacity:0.85}
-.next-btn-text{position:relative;z-index:2}
-.cancel-next{background:transparent;border:0;color:#888;font-size:18px;padding:4px; cursor:pointer;}
-
 .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#eee;color:#000;padding:10px 20px;border-radius:6px;display:none;z-index:60;font-weight:800}
 </style>
 </head>
@@ -202,7 +215,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 </header>
 
 <main class="container" id="container">
-  <!-- Akordeon se vygeneruje sem -->
 </main>
 
 <button class="admin" id="adminBtn" tabindex="0" onclick="openAdmin()">⚙ Nastavení</button>
@@ -238,6 +250,16 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
       </button>
     </div>
 
+    <!-- TLAČÍTKO PŘESKOČIT ÚVOD (DO 3:15) -->
+    <button class="skip-intro-btn" id="skipIntroBtn" onclick="skipIntro()">
+      Přeskočit úvod ▶
+    </button>
+
+    <!-- TLAČÍTKO DALŠÍ DÍL (50 SEKUND PŘED KONCEM) -->
+    <button class="next-ep-btn-clean" id="nextEpBtnClean" onclick="playNextEpisode()">
+      Další díl ▶
+    </button>
+
     <div class="resume-card" id="resumeCard">
       <div class="resume-title">Pokračovat v přehrávání?</div>
       <div class="resume-time">Minule jsi skončil v čase <span id="resumeTimeStr">0:00</span></div>
@@ -253,18 +275,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
     </div>
 
     <video id="video" playsinline preload="metadata"></video>
-
-    <div class="next-ep-card" id="nextEpCard">
-      <div class="next-ep-info">
-        <span class="label">Další epizoda</span>
-        <span class="title" id="nextEpTitle">Epizoda X</span>
-      </div>
-      <button class="next-btn" id="nextEpBtn" tabindex="0" onclick="playNextEpisode()">
-        <div class="next-btn-fill" id="nextBtnFill"></div>
-        <span class="next-btn-text">Přehrát <span id="nextCountdown">10</span>s ▶</span>
-      </button>
-      <button class="cancel-next" id="cancelNextBtn" tabindex="0" onclick="dismissNextPrompt()">✕</button>
-    </div>
     
     <div class="player-ui" id="playerUI">
       <div class="progress-container" id="progressContainer">
@@ -309,7 +319,8 @@ var EPISODES = [
 ];
 
 var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-var SKIP_THRESHOLD = 10;
+var INTRO_THRESHOLD = 195; // 3 minuty a 15 sekund (3 * 60 + 15 = 195s)
+var NEXT_EPISODE_TRIGGER = 50; // 50 sekund před koncem
 var PROGRESS_KEY = "dexter_saved_progress_v1";
 var LAST_SEASON_KEY = "dexter_last_opened_season";
 
@@ -320,7 +331,6 @@ var current = 0, hideTimer = null, clickTimer = null;
 var isSeeking = false;
 var isPerformingSeek = false;
 var pendingSeekTarget = null;
-var nextPromptDismissed = false;
 var pendingResumeTime = 0;
 
 function $(id){ return document.getElementById(id); }
@@ -452,10 +462,10 @@ function playEpisode(id){
   }
   
   current = id; 
-  nextPromptDismissed = false;
   isPerformingSeek = false;
   pendingSeekTarget = null;
-  hideNextPrompt();
+  $("skipIntroBtn").style.display = "none";
+  $("nextEpBtnClean").style.display = "none";
 
   var v = $("video");
   $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
@@ -505,7 +515,7 @@ function confirmResume(shouldResume) {
   $("playBtn").focus();
 }
 
-/* BEZPEČNÉ PŘETÁČENÍ (ZAMEZENÍ ROZPADU ZVUKU) */
+/* BEZPEČNÉ PŘETÁČENÍ */
 function applySafeSeek(targetTime) {
   var v = $("video");
   if (!v.duration) return;
@@ -538,6 +548,12 @@ function seekBy(s){
   resetUIHide();
 }
 
+function skipIntro(){
+  applySafeSeek(INTRO_THRESHOLD);
+  $("skipIntroBtn").style.display = "none";
+  resetUIHide();
+}
+
 function playNextEpisode(){
   var nextId = current + 1;
   if(links[String(nextId)]){
@@ -549,16 +565,10 @@ function playNextEpisode(){
       }
     }
     playEpisode(nextId);
+  } else {
+    toast("Žádná další epizoda nemá odkaz.");
   }
 }
-
-function dismissNextPrompt(){
-  nextPromptDismissed = true;
-  hideNextPrompt();
-  $("playBtn").focus();
-}
-
-function hideNextPrompt(){ $("nextEpCard").className = "next-ep-card"; }
 
 function closePlayer(){ 
   saveCurrentProgress();
@@ -572,7 +582,8 @@ function closePlayer(){
   $("player").className = "player";
   
   $("resumeCard").className = "resume-card";
-  hideNextPrompt();
+  $("skipIntroBtn").style.display = "none";
+  $("nextEpBtnClean").style.display = "none";
   clearTimeout(hideTimer);
   
   if (document.fullscreenElement) {
@@ -625,7 +636,7 @@ function fmt(s){
   return Math.floor(s/60) + ":" + String(s%60 < 10 ? "0" + (s%60) : s%60);
 }
 
-/* TIMELINE KONTROLA A SEEKING PRO PC */
+/* TIMELINE PRO PC */
 var pContainer = $("progressContainer");
 var tooltip = $("tooltip");
 
@@ -674,6 +685,7 @@ window.addEventListener("mouseup", function(e){
   }
 });
 
+/* HLÍDÁNÍ ČASU PRO SKIP INTRO A DALŠÍ DÍL */
 $("video").addEventListener("timeupdate", function(){
   var v = $("video");
   if (!v.duration) return;
@@ -685,22 +697,22 @@ $("video").addEventListener("timeupdate", function(){
 
   saveCurrentProgress();
 
+  // 1. Přeskočit úvod: zobrazuje se POUZE před 3:15
+  if (v.currentTime < INTRO_THRESHOLD) {
+    $("skipIntroBtn").style.display = "block";
+  } else {
+    $("skipIntroBtn").style.display = "none";
+  }
+
+  // 2. Další díl: zobrazuje se 50 sekund před koncem (pokud existuje další díl)
   var timeLeft = v.duration - v.currentTime;
   var nextId = current + 1;
-  var nextEp = getEpisode(nextId);
   var hasNextEpisode = !!links[String(nextId)];
 
-  if (hasNextEpisode && nextEp && !nextPromptDismissed && timeLeft <= SKIP_THRESHOLD && timeLeft > 0) {
-    $("nextEpTitle").textContent = formatSE(nextEp.s, nextEp.e) + " - " + nextEp.title;
-    $("nextCountdown").textContent = Math.ceil(timeLeft);
-    $("nextBtnFill").style.width = (((SKIP_THRESHOLD - timeLeft) / SKIP_THRESHOLD) * 100) + "%";
-    
-    if($("nextEpCard").className.indexOf("show") === -1) {
-      $("nextEpCard").className = "next-ep-card show";
-      $("nextEpBtn").focus();
-    }
+  if (hasNextEpisode && timeLeft <= NEXT_EPISODE_TRIGGER && timeLeft > 0) {
+    $("nextEpBtnClean").style.display = "block";
   } else {
-    hideNextPrompt();
+    $("nextEpBtnClean").style.display = "none";
   }
 });
 
@@ -722,7 +734,7 @@ $("video").addEventListener("pause", function(){
 });
 
 $("videoWrap").addEventListener("click", function(e){
-  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.next-ep-card') || e.target.closest('.resume-card') || e.target.closest('.touch-overlay-controls')) return;
+  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.resume-card') || e.target.closest('.touch-overlay-controls') || e.target.closest('.skip-intro-btn') || e.target.closest('.next-ep-btn-clean')) return;
   
   if (clickTimer == null) {
     clickTimer = setTimeout(function() {
