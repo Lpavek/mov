@@ -3,763 +3,805 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hudební Atlas - Spotify 3D CD</title>
+<title>Přehrávač seriálů — DEXTER</title>
 <style>
-    * {
-        box-sizing: border-box;
-        user-select: none;
-    }
+:root{
+  --bg:#070707; --panel:#141414; --text:#f2f2f2;
+  --muted:#8f8f8f; --red:#e51a1a; --line:#292929;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;user-select:none;width:100%;height:100%;overflow-x:hidden}
 
-    body {
-        margin: 0;
-        padding: 0;
-        background-color: #121212; 
-        overflow: hidden; 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
+:focus, .tv-focus {
+  outline: none !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 0 25px rgba(229, 26, 26, 1) !important;
+  transform: scale(1.03);
+  z-index: 5;
+}
 
-    /* --- SEARCH BAR STYLES --- */
-    .search-container {
-        position: fixed;
-        top: 30px;
-        left: 45px;
-        width: 380px;
-        z-index: 200;
-    }
+.hero{
+  padding:30px 5vw 15px; background:#0d0d0d; border-bottom:2px solid var(--line);
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.brand{font-weight:900;letter-spacing:.15em;font-size:13px;color:var(--red)}
+.hero h1{font-size:36px;margin:8px 0;text-transform:uppercase;letter-spacing:-.02em}
 
-    .search-input-wrapper {
-        position: relative;
-    }
+.json-link-btn {
+  background: #181820; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; text-decoration: none; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; transition: 0.2s; margin-bottom: 8px;
+}
+.json-link-btn:hover { background: #252733; border-color: var(--red); color: #fff; }
 
-    #searchInput {
-        width: 100%;
-        padding: 16px 24px;
-        border-radius: 30px;
-        border: 1px solid #333;
-        background: #242424;
-        color: white;
-        font-size: 16px;
-        outline: none;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-        transition: border-color 0.2s, background 0.2s;
-    }
+.container{width:90vw;margin:20px auto 0; padding-bottom: 100px;}
 
-    #searchInput:focus {
-        border-color: #1db954;
-        background: #2a2a2a;
-    }
+.season-btn {
+  width: 100%; text-align: left; background: #1a1a1a; border: 2px solid var(--line);
+  color: #fff; padding: 22px 25px; font-size: 22px; font-weight: 800; text-transform: uppercase;
+  border-radius: 8px; margin-bottom: 10px; transition: 0.2s; letter-spacing: 2px;
+  display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+}
+.season-btn:hover, .season-btn:focus { background: #222; }
 
-    .search-results {
-        margin-top: 12px;
-        background: #282828;
-        border-radius: 16px;
-        max-height: 450px;
-        overflow-y: auto;
-        display: none;
-        flex-direction: column;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.6);
-        border: 1px solid #333;
-    }
+.season-arrow { transition: transform 0.3s ease; font-size: 18px; }
+.season-wrapper.open ~ .season-btn .season-arrow { transform: rotate(180deg); }
 
-    .search-results::-webkit-scrollbar { width: 6px; }
-    .search-results::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
+.season-wrapper {
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease;
+  padding: 0 5px;
+}
+.season-wrapper.open {
+  max-height: 2500px; opacity: 1; padding: 10px 5px 25px 5px;
+}
 
-    .result-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        border-bottom: 1px solid #333;
-        color: white;
-        transition: background 0.2s;
-        cursor: pointer;
-    }
+.season-content {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px;
+}
 
-    .result-item:hover { background: #3a3a3a; }
-    .result-item:last-child { border-bottom: none; }
+.card{
+  background:var(--panel);border:2px solid var(--line); cursor:pointer;
+  border-radius:8px;padding:20px;min-height:150px;transition:transform 0.15s, border-color 0.15s;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.ep{color:var(--red);font-size:14px;font-weight:900;}
+.card h3{margin:8px 0 14px;font-size:18px; color:#fff;}
+.play{border:0;border-radius:4px;background:#eee;color:#000;padding:10px 16px;font-weight:800;font-size:14px; cursor:pointer;}
+.card:focus .play, .card:focus-within .play, .card:hover .play { background:var(--red);color:#fff; }
 
-    .result-item img {
-        width: 54px;
-        height: 54px;
-        border-radius: 6px;
-        margin-right: 16px;
-        object-fit: cover;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    }
+.admin{
+  position:fixed;right:25px;bottom:25px;border:2px solid #444;background:#151515;color:#fff;
+  border-radius:50px;padding:12px 20px;z-index:20;font-weight:700;font-size:14px; cursor:pointer;
+}
 
-    .result-info {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;z-index:30;padding:30px 15px;overflow:auto}
+.modal.open{display:block}
+.panel{width:min(700px,100%);margin:auto;background:#111;border:2px solid #333;border-radius:10px;padding:25px}
+.panel h2{margin-top:0}
+.formrow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;margin:12px 0}
+input,select{width:100%;background:#000;color:#fff;border:2px solid #444;border-radius:6px;padding:10px;font-size:15px}
+.actions{display:flex;gap:10px;margin-top:20px}
+.action{border:0;border-radius:6px;padding:10px 16px;background:#ddd;color:#000;font-weight:800; cursor:pointer;}
+.action.red{background:var(--red);color:#fff}
 
-    .result-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #fff; }
-    .result-artist { font-size: 13px; color: #b3b3b3; }
+.player{
+  display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
+  background:#000; z-index:999999; flex-direction:column; cursor:default;
+}
+.player.open{ display:flex !important; }
+.player.hide-ui { cursor: none; }
 
-    .add-btn {
-        background: transparent;
-        color: #1db954;
-        border: 1px solid #1db954;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
+body.in-player .hero,
+body.in-player .container,
+body.in-player .admin {
+  display: none !important;
+}
 
-    .result-item:hover .add-btn {
-        background: #1db954;
-        color: #121212;
-        transform: scale(1.05);
-    }
-    
-    .loading-spinner {
-        display: none;
-        position: absolute;
-        right: 20px;
-        top: 18px;
-        color: #1db954;
-        font-size: 14px;
-        font-weight: 600;
-        animation: pulse 1s infinite alternate;
-    }
+.video-wrap{position:relative;width:100%;height:100%;flex:1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+video{width:100%;height:100%;object-fit:contain;background:#000}
 
-    @keyframes pulse {
-        from { opacity: 0.5; }
-        to { opacity: 1; }
-    }
+/* VELKÁ TLAČÍTKA PRO KURZOR TV */
+.touch-overlay-controls {
+  position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4vw; pointer-events: none; z-index: 150; transition: opacity 0.25s ease;
+}
+.player.hide-ui .touch-overlay-controls { opacity: 0; pointer-events: none; }
 
-    /* --- 3D SCENE STYLES --- */
-    .scene {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        perspective: 1600px;
-        perspective-origin: 50% 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-    }
+.big-touch-btn {
+  pointer-events: auto; background: rgba(20, 20, 20, 0.85); border: 2px solid var(--red);
+  color: #fff; width: 100px; height: 100px; border-radius: 50%; font-size: 20px; font-weight: 900;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8); transition: transform 0.15s, background 0.15s;
+}
+.big-touch-btn:hover, .big-touch-btn:focus { transform: scale(1.15); background: var(--red); }
+.big-touch-btn.center { width: 90px; height: 90px; font-size: 28px; }
 
-    .cd-rack {
-        position: relative;
-        transform-style: preserve-3d;
-        transform: rotateX(24deg) rotateY(-40deg) rotateZ(12deg);
-        pointer-events: auto;
-    }
+/* NENÁPADNÉ TLAČÍTKO PŘESKOČIT ÚVOD (VLEVO) */
+.skip-intro-btn {
+  position: absolute; left: 4vw; bottom: 100px; z-index: 160;
+  background: rgba(18, 18, 18, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ddd; padding: 10px 18px; border-radius: 6px; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.05em; cursor: pointer; display: none; backdrop-filter: blur(4px);
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s, color 0.2s;
+}
+.skip-intro-btn:hover, .skip-intro-btn:focus {
+  background: rgba(30, 30, 30, 0.9); border-color: #fff; color: #fff;
+}
+.player.hide-ui .skip-intro-btn { opacity: 0; pointer-events: none; }
 
-    .cd-case {
-        position: absolute;
-        top: -110px;
-        left: -120px;
-        width: 240px;
-        height: 220px;
-        transform-style: preserve-3d;
-        cursor: pointer;
-        will-change: transform;
-        transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
+/* TLAČÍTKO DALŠÍ DÍL (VPRAVO, 50s PŘED KONCEM) */
+.next-ep-btn-clean {
+  position: absolute; right: 4vw; bottom: 100px; z-index: 160;
+  background: rgba(18, 18, 18, 0.85); border: 2px solid var(--red);
+  color: #fff; padding: 12px 22px; border-radius: 6px; font-size: 15px; font-weight: 800;
+  cursor: pointer; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  transition: opacity 0.2s, transform 0.15s, background 0.15s;
+}
+.next-ep-btn-clean:hover, .next-ep-btn-clean:focus {
+  background: var(--red); transform: scale(1.05);
+}
+.player.hide-ui .next-ep-btn-clean { opacity: 0; pointer-events: none; }
 
-    .cd-plastic {
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1.5px solid rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
-        box-shadow: inset 0 0 10px rgba(255,255,255,0.2), 0 25px 35px -10px rgba(0,0,0,0.5);
-        transform: translateZ(6px);
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-    }
+.resume-card {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(18, 18, 18, 0.96); border: 2px solid var(--red);
+  border-radius: 12px; padding: 25px 30px; display: none; flex-direction: column; align-items: center; gap: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; backdrop-filter: blur(10px); text-align: center;
+}
+.resume-card.show { display: flex; }
+.resume-title { font-size: 20px; font-weight: 800; color: #fff; }
+.resume-time { font-size: 15px; color: #aaa; }
+.resume-time span { color: #fff; font-weight: bold; }
+.resume-actions { display: flex; gap: 15px; margin-top: 5px; }
+.resume-btn {
+  border: 0; border-radius: 6px; padding: 12px 24px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.15s;
+}
+.resume-btn.ok { background: var(--red); color: #fff; }
+.resume-btn.no { background: #333; color: #ccc; }
+.resume-btn:focus, .resume-btn:hover { transform: scale(1.08); }
 
-    .cd-spine-area {
-        width: 32px;
-        height: 100%;
-        border-right: 1px solid rgba(255, 255, 255, 0.2);
-        background: repeating-linear-gradient(0deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 3px, transparent 3px, transparent 7px);
-        flex-shrink: 0;
-    }
+.player-ui, .player-top{position:absolute;transition:opacity .25s ease, transform .25s ease;z-index:100}
+.player-top{
+  top:0;left:0;right:0;padding:25px 4vw;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(0,0,0,0.95),transparent); pointer-events:none;
+}
+.player-top * { pointer-events:auto; }
+.now{font-weight:800;font-size:18px;color:#fff}
+.close{background:rgba(229,26,26,0.9);border:0;color:#fff;padding:8px 16px;border-radius:6px;font-size:18px;font-weight:bold; cursor:pointer;}
 
-    .cd-artwork {
-        width: 195px;
-        height: 195px;
-        margin-left: 6px;
-        background-color: #111;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    }
+.player-ui{
+  bottom:0;left:0;right:0;padding:40px 4vw 25px;
+  background:linear-gradient(0deg,rgba(0,0,0,0.95),transparent);
+}
+.player.hide-ui .player-ui{opacity:0;transform:translateY(15px);pointer-events:none}
+.player.hide-ui .player-top{opacity:0;transform:translateY(-15px);pointer-events:none}
 
-    .cd-artwork img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+.progress-container{ position:relative; padding:10px 0; cursor:pointer; margin-bottom:8px; }
+.progress{ height:8px; background:#444; border-radius:4px; position:relative; }
+.progress-bar{ height:100%; width:0; background:var(--red); border-radius:4px; position:relative; }
+.progress-bar::after{
+  content:''; position:absolute; right:-6px; top:-4px; width:16px; height:16px; background:#fff; border-radius:50%; opacity:0; transition:opacity 0.15s;
+}
+.progress-container:hover .progress-bar::after{ opacity:1; }
 
-    .cd-back-face {
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 4px;
-        transform: translateZ(-6px) rotateY(180deg);
-    }
+.timeline-tooltip{
+  position:absolute; bottom:25px; transform:translateX(-50%); background:#151515; color:#fff;
+  padding:4px 8px; border-radius:4px; font-size:12px; display:none; pointer-events:none;
+  box-shadow:0 2px 10px rgba(0,0,0,0.8); border:1px solid #444; white-space:nowrap; font-weight:700;
+}
 
-    .cd-edge-left {
-        position: absolute;
-        width: 12px;
-        height: 220px;
-        top: 0;
-        left: -6px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transform: rotateY(-90deg);
-    }
+.controls{display:flex;align-items:center;gap:12px}
+.ctrl{width:50px;height:44px;border:2px solid transparent;border-radius:6px;background:rgba(30,30,30,.9);color:#fff;font-size:18px; cursor:pointer;}
+.ctrl:hover{background:#333}
+.time{font-variant-numeric:tabular-nums;color:#ddd;font-size:15px;margin:0 8px;font-weight:700}
+.spacer{flex:1}
 
-    /* --- INFO HUD --- */
-    .info-hud {
-        position: fixed;
-        bottom: 40px;
-        left: 50px;
-        color: #fff;
-        z-index: 100;
-        pointer-events: none;
-    }
-
-    .info-hud .index {
-        font-size: 15px;
-        font-weight: 800;
-        letter-spacing: 3px;
-        color: #1db954;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-    }
-
-    .info-hud .title {
-        font-size: 34px;
-        font-weight: 900;
-        letter-spacing: -1px;
-        margin-bottom: 10px;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-
-    .info-hud .metadata {
-        font-size: 16px;
-        color: #b3b3b3;
-        font-weight: 500;
-    }
-    
-    .empty-state {
-        color: #555;
-        font-size: 24px;
-        font-weight: bold;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: none;
-        text-align: center;
-        z-index: 150;
-    }
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#eee;color:#000;padding:10px 20px;border-radius:6px;display:none;z-index:60;font-weight:800}
 </style>
 </head>
 <body>
 
-<div class="search-container">
-    <div class="search-input-wrapper">
-        <input type="text" id="searchInput" placeholder="Hledat na Spotify..." autocomplete="off" disabled>
-        <div class="loading-spinner" id="loadingSpinner">Hledám...</div>
+<header class="hero">
+  <div>
+    <div class="brand">KNIHOVNA / SERIÁLY</div>
+    <h1>DEXTER</h1>
+  </div>
+  <div>
+    <a href="get_json" class="json-link-btn" title="Otevřít JSON Generátor">
+      <span>📋</span> JSON Generator
+    </a>
+  </div>
+</header>
+
+<main class="container" id="container">
+</main>
+
+<button class="admin" id="adminBtn" tabindex="0" onclick="openAdmin()">⚙ Nastavení</button>
+
+<div id="adminModal" class="modal">
+  <div class="panel">
+    <h2>Správa odkazů</h2>
+    <div class="formrow"><label>Epizoda</label><select id="episodeSelect" tabindex="0"></select></div>
+    <div class="formrow"><label>Odkaz</label><input id="urlInput" placeholder="https://example.com/video.mp4" tabindex="0"></div>
+    <div class="actions">
+      <button class="action red" id="saveBtn" tabindex="0" onclick="saveLink()">Uložit dočasně</button>
+      <button class="action" tabindex="0" onclick="closeAdmin()">Zavřít</button>
     </div>
-    <div id="searchResults" class="search-results"></div>
+  </div>
 </div>
 
-<div class="info-hud" id="infoHud" style="display: none;">
-    <div class="index" id="albumIndex"></div>
-    <div class="title" id="albumTitle"></div>
-    <div class="metadata" id="albumMeta"></div>
+<div id="player" class="player">
+  <div class="video-wrap" id="videoWrap">
+    
+    <div class="touch-overlay-controls" id="touchControls">
+      <button class="big-touch-btn" onclick="seekBy(-10)" title="-10 sekund">
+        <span>↶</span>
+        <span style="font-size:12px;">-10s</span>
+      </button>
+      
+      <button class="big-touch-btn center" id="bigPlayBtn" onclick="togglePlay()" title="Pauza / Play">
+        ▶
+      </button>
+
+      <button class="big-touch-btn" onclick="seekBy(10)" title="+10 sekund">
+        <span>↷</span>
+        <span style="font-size:12px;">+10s</span>
+      </button>
+    </div>
+
+    <!-- TLAČÍTKO PŘESKOČIT ÚVOD (DO 3:15) -->
+    <button class="skip-intro-btn" id="skipIntroBtn" onclick="skipIntro()">
+      Přeskočit úvod ▶
+    </button>
+
+    <!-- TLAČÍTKO DALŠÍ DÍL (50 SEKUND PŘED KONCEM) -->
+    <button class="next-ep-btn-clean" id="nextEpBtnClean" onclick="playNextEpisode()">
+      Další díl ▶
+    </button>
+
+    <div class="resume-card" id="resumeCard">
+      <div class="resume-title">Pokračovat v přehrávání?</div>
+      <div class="resume-time">Minule jsi skončil v čase <span id="resumeTimeStr">0:00</span></div>
+      <div class="resume-actions">
+        <button class="resume-btn ok" id="resumeOkBtn" tabindex="0" onclick="confirmResume(true)">OK chci</button>
+        <button class="resume-btn no" id="resumeNoBtn" tabindex="0" onclick="confirmResume(false)">✕ nechci</button>
+      </div>
+    </div>
+
+    <div class="player-top">
+      <div class="now" id="now"></div>
+      <button class="ctrl close" id="closePlayerBtn" tabindex="0" onclick="closePlayer()">✕ Zavřít</button>
+    </div>
+
+    <video id="video" playsinline preload="metadata"></video>
+    
+    <div class="player-ui" id="playerUI">
+      <div class="progress-container" id="progressContainer">
+        <div class="timeline-tooltip" id="tooltip">0:00</div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <div class="controls">
+        <button class="ctrl" id="seekBackBtn" tabindex="0" onclick="seekBy(-10)">↶</button>
+        <button class="ctrl" id="playBtn" tabindex="0" onclick="togglePlay()">▶</button>
+        <button class="ctrl" id="seekForwardBtn" tabindex="0" onclick="seekBy(10)">↷</button>
+        <span class="time" id="time">0:00 / 0:00</span>
+        <span class="spacer"></span>
+        <button class="ctrl" id="muteBtn" tabindex="0" onclick="toggleMute()">🔊</button>
+        <button class="ctrl" id="fullBtn" tabindex="0" onclick="toggleFullscreen()">⛶ Maximovat</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="empty-state" id="emptyState">Načítání...</div>
-
-<div class="scene">
-    <div class="cd-rack" id="rack"></div>
-</div>
+<div id="toast" class="toast"></div>
 
 <script>
-    const CLIENT_ID = "d12d1f6a79ab4d7fbdf00435566ed35d";
-    
-    const REDIRECT_URI = window.location.origin + window.location.pathname;
-    const AUTH_KEY = "music_atlas_spotify_token";
-    const ALBUMS_KEY = "music_atlas_saved_albums";
+var EPISODES = [
+  /* 1. Série */
+  {id:1, s:1, e:1, title:"Dexter"}, {id:2, s:1, e:2, title:"Krokodýlí slzy"}, {id:3, s:1, e:3, title:"Nevinné mládí"}, {id:4, s:1, e:4, title:"Pomocná ruka"}, {id:5, s:1, e:5, title:"Americký sen"}, {id:6, s:1, e:6, title:"Vráceno odesílateli"}, {id:7, s:1, e:7, title:"Okruh přátel"}, {id:8, s:1, e:8, title:"Cvokař k večeři"}, {id:9, s:1, e:9, title:"Táta to ví nejlíp"}, {id:10, s:1, e:10, title:"Vidět rudě"}, {id:11, s:1, e:11, title:"S pravdou ven"}, {id:12, s:1, e:12, title:"Volání krve"},
+  /* 2. Série */
+  {id:13, s:2, e:1, title:"Ono to žije"}, {id:14, s:2, e:2, title:"Až si vydechnu"}, {id:15, s:2, e:3, title:"Nepříjemná lež"}, {id:16, s:2, e:4, title:"Průhledný"}, {id:17, s:2, e:5, title:"Temný ochránce"}, {id:18, s:2, e:6, title:"Dex, lži a video"}, {id:19, s:2, e:7, title:"Noc, kdy se mi rozsvítilo"}, {id:20, s:2, e:8, title:"Svítání"}, {id:21, s:2, e:9, title:"Odpor je marný"}, {id:22, s:2, e:10, title:"Tajemství domu Morganů"}, {id:23, s:2, e:11, title:"Na nejbližší odbočce zahněte vlevo"}, {id:24, s:2, e:12, title:"Britská invaze"},
+  /* 3. Série */
+  {id:25, s:3, e:1, title:"Náš otec"}, {id:26, s:3, e:2, title:"Hledá se Freebo"}, {id:27, s:3, e:3, title:"Lev dnes v noci spí"}, {id:28, s:3, e:4, title:"Co je doma, to se počítá"}, {id:29, s:3, e:5, title:"Plavba za domovem"}, {id:30, s:3, e:6, title:"Ano, jde to"}, {id:31, s:3, e:7, title:"Jasné jako facka"}, {id:32, s:3, e:8, title:"Efekt motýlích křídel"}, {id:33, s:3, e:9, title:"Co se stalo včera v noci"}, {id:34, s:3, e:10, title:"Jít svou vlastní cestou"}, {id:35, s:3, e:11, title:"Rozlučka"}, {id:36, s:3, e:12, title:"Chcete si vzít Dextera Morgana?"},
+  /* 4. Série */
+  {id:37, s:4, e:1, title:"Život jako ve snu"}, {id:38, s:4, e:2, title:"Pozůstatky"}, {id:39, s:4, e:3, title:"Oslepení"}, {id:40, s:4, e:4, title:"Dexter má dovolenou"}, {id:41, s:4, e:5, title:"Drsný Harry"}, {id:42, s:4, e:6, title:"Kladivo vrací úder"}, {id:43, s:4, e:7, title:"Mrtvá voda"}, {id:44, s:4, e:8, title:"Vražda meziměsto"}, {id:45, s:4, e:9, title:"Velké sousto"}, {id:46, s:4, e:10, title:"Ztracení chlapci"}, {id:47, s:4, e:11, title:"Dobrý den, Dextere Morgane"}, {id:48, s:4, e:12, title:"Už je po všem"},
+  /* 5. Série */
+  {id:49, s:5, e:1, title:"Pardon"}, {id:50, s:5, e:2, title:"Nazdárek, bandito"}, {id:51, s:5, e:3, title:"Prakticky dokonalá"}, {id:52, s:5, e:4, title:"Kráska a zvíře"}, {id:53, s:5, e:5, title:"První krev"}, {id:54, s:5, e:6, title:"Utlumení vztahů"}, {id:55, s:5, e:7, title:"Uzavřený kruh"}, {id:56, s:5, e:8, title:"Ber to"}, {id:57, s:5, e:9, title:"Mladé a neklidné"}, {id:58, s:5, e:10, title:"Na začátku"}, {id:59, s:5, e:11, title:"Vážný svinstvo"}, {id:60, s:5, e:12, title:"Velká ryba"},
+  /* 6. Série */
+  {id:61, s:6, e:1, title:"Věřte, nevěřte"}, {id:62, s:6, e:2, title:"Bylo, nebylo..."}, {id:63, s:6, e:3, title:"Polda a bandita"}, {id:64, s:6, e:4, title:"Jezdci apokalypsy"}, {id:65, s:6, e:5, title:"Anděl smrti"}, {id:66, s:6, e:6, title:"Pusťte barabáše"}, {id:67, s:6, e:7, title:"Výlet do Nebrasky"}, {id:68, s:6, e:8, title:"Hříšní lidé města miamského"}, {id:69, s:6, e:9, title:"Mrazivé zjištění"}, {id:70, s:6, e:10, title:"Svědkův učeň"}, {id:71, s:6, e:11, title:"Řekni to mé ruce"}, {id:72, s:6, e:12, title:"Konec světa"},
+  /* 7. Série */
+  {id:73, s:7, e:1, title:"Ty jsi...?"}, {id:74, s:7, e:2, title:"Na slunci s točenou zmrzlinou"}, {id:75, s:7, e:3, title:"Systému navzdory"}, {id:76, s:7, e:4, title:"Uteč"}, {id:77, s:7, e:5, title:"Do hloubky"}, {id:78, s:7, e:6, title:"Špatná rozhodnutí"}, {id:79, s:7, e:7, title:"Chemie"}, {id:80, s:7, e:8, title:"Argentina"}, {id:81, s:7, e:9, title:"Hlava nehlava"}, {id:82, s:7, e:10, title:"Zodpovědní dospělí"}, {id:83, s:7, e:11, title:"Vidíš to, co já?"}, {id:84, s:7, e:12, title:"Nový začátek konce"},
+  /* 8. Série */
+  {id:85, s:8, e:1, title:"Nádhernej den"}, {id:86, s:8, e:2, title:"Není nebe bez mráčku..."}, {id:87, s:8, e:3, title:"Co žere Dextera Morgana?"}, {id:88, s:8, e:4, title:"Zjizvená tkáň"}, {id:89, s:8, e:5, title:"Vařila myšička kašičku"}, {id:90, s:8, e:6, title:"Kousek sebe"}, {id:91, s:8, e:7, title:"Kodex oblékání"}, {id:92, s:8, e:8, title:"Už tam budem?"}, {id:93, s:8, e:9, title:"Ohraná písnička"}, {id:94, s:8, e:10, title:"Sbohem, Miami"}, {id:95, s:8, e:11, title:"Ten starý Dexter"}, {id:96, s:8, e:12, title:"Pamatuješ si ty zrůdy?"},
+  /* 9. Série (Nová krev) */
+  {id:97, s:9, e:1, title:"Studený start"}, {id:98, s:9, e:2, title:"Průtrž průserů"}, {id:99, s:9, e:3, title:"Kouřové signály"}, {id:100, s:9, e:4, title:"H jako hrdina"}, {id:101, s:9, e:5, title:"Na útěku"}, {id:102, s:9, e:6, title:"Příliš mnoho tuňákových sendvičů"}, {id:103, s:9, e:7, title:"S kůží na trh"}, {id:104, s:9, e:8, title:"Nefér hra"}, {id:105, s:9, e:9, title:"Zůstane to v rodině"}, {id:106, s:9, e:10, title:"Otcovy hříchy"}
+];
 
-    const rack = document.getElementById('rack');
-    const infoHud = document.getElementById('infoHud');
-    const emptyState = document.getElementById('emptyState');
-    const albumIndexEl = document.getElementById('albumIndex');
-    const albumTitleEl = document.getElementById('albumTitle');
-    const albumMetaEl = document.getElementById('albumMeta');
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    
-    let albums = [];
-    let cdElements = [];
-    let activeIndex = 0;
-    const spacingZ = 45; 
+var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var INTRO_THRESHOLD = 195; // 3 minuty a 15 sekund (3 * 60 + 15 = 195s)
+var NEXT_EPISODE_TRIGGER = 50; // 50 sekund před koncem
+var PROGRESS_KEY = "dexter_saved_progress_v1";
+var LAST_SEASON_KEY = "dexter_last_opened_season";
 
-    const audioPlayer = new Audio();
-    let fadeInterval = null;
-    let currentPreviewUrl = null;
+var links = {};
+var savedProgress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
 
-    // --- UI SCROLL CLICK SOUND (Web Audio API) ---
-    let audioCtx = null;
-    function playTickSound() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
-    }
+var current = 0, hideTimer = null, clickTimer = null;
+var isSeeking = false;
+var isPerformingSeek = false;
+var pendingSeekTarget = null;
+var pendingResumeTime = 0;
 
-    // --- LOCAL STORAGE ALBUMS ---
-    function saveAlbums() {
-        localStorage.setItem(ALBUMS_KEY, JSON.stringify(albums));
-    }
+function $(id){ return document.getElementById(id); }
 
-    function loadAlbums() {
-        const saved = localStorage.getItem(ALBUMS_KEY);
-        if (saved) {
-            albums = JSON.parse(saved);
-        }
-        renderRack();
-    }
+function formatSE(s, e){
+  return "S" + (s < 10 ? "0" + s : s) + "E" + (e < 10 ? "0" + e : e);
+}
 
-    function renderRack() {
-        rack.innerHTML = '';
-        cdElements = [];
-        albums.forEach((albumData, index) => {
-            const cd = document.createElement('div');
-            cd.className = 'cd-case';
-            cd.innerHTML = `
-                <div class="cd-edge-left"></div>
-                <div class="cd-back-face"></div>
-                <div class="cd-plastic">
-                    <div class="cd-spine-area"></div>
-                    <div class="cd-artwork">
-                        <img src="${albumData.cover}" alt="${albumData.title}">
-                    </div>
-                </div>
-            `;
-            rack.appendChild(cd);
-            cdElements.push({ el: cd, index: index });
-        });
-        
-        if (albums.length > 0) {
-            emptyState.style.display = 'none';
-            infoHud.style.display = 'block';
-            updateScene();
-        }
-    }
+function getEpisode(id) {
+  for(var i=0; i<EPISODES.length; i++) {
+    if(EPISODES[i].id == id) return EPISODES[i];
+  }
+  return null;
+}
 
-    // --- SPOTIFY AUTHENTICATION ---
-    async function pkceChallenge(v) {
-        const d = new TextEncoder().encode(v);
-        const h = await crypto.subtle.digest("SHA-256", d);
-        return btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    }
-    
-    function rand() {
-        const a = new Uint8Array(64);
-        crypto.getRandomValues(a);
-        return btoa(String.fromCharCode(...a)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    }
-
-    async function login() {
-        if (!CLIENT_ID) {
-            alert("Nejdřív musíš do kódu vložit své Client ID!");
-            return;
-        }
-        const verifier = rand();
-        const challenge = await pkceChallenge(verifier);
-        sessionStorage.setItem("spotify_verifier", verifier);
-        
-        const p = new URLSearchParams({
-            client_id: CLIENT_ID,
-            response_type: "code",
-            redirect_uri: REDIRECT_URI,
-            scope: "user-read-private",
-            code_challenge_method: "S256",
-            code_challenge: challenge
-        });
-        location.href = "https://accounts.spotify.com/authorize?" + p;
-    }
-
-    async function finishAuth() {
-        const urlParams = new URLSearchParams(location.search);
-        const code = urlParams.get("code");
-        if (!code) return;
-        
-        const verifier = sessionStorage.getItem("spotify_verifier");
-        if (!verifier) return;
-
-        const p = new URLSearchParams({
-            client_id: CLIENT_ID,
-            grant_type: "authorization_code",
-            code: code,
-            redirect_uri: REDIRECT_URI,
-            code_verifier: verifier
-        });
-
-        try {
-            const r = await fetch("https://accounts.spotify.com/api/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: p
-            });
-            const d = await r.json();
-            if (d.access_token) {
-                const authData = { 
-                    access_token: d.access_token, 
-                    expires_at: Date.now() + d.expires_in * 1000 
-                };
-                if (d.refresh_token) authData.refresh_token = d.refresh_token; // Uložíme i refresh token pro automatickou obnovu
-                
-                localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                localStorage.removeItem(AUTH_KEY);
-            }
-        } catch(e) {
-            console.error("Auth error", e);
-        }
-    }
-
-    async function getToken() {
-        const a = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-        if (!a) return null;
-        
-        // Pokud je token stále platný (s 1min rezervou)
-        if (a.expires_at > Date.now() + 60000) return a.access_token;
-        
-        // Pokud vypršel, ale máme refresh_token, obnovíme ho na pozadí
-        if (a.refresh_token) {
-            const p = new URLSearchParams({
-                client_id: CLIENT_ID,
-                grant_type: "refresh_token",
-                refresh_token: a.refresh_token
-            });
-
-            try {
-                const r = await fetch("https://accounts.spotify.com/api/token", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: p
-                });
-                const d = await r.json();
-                if (d.access_token) {
-                    a.access_token = d.access_token;
-                    a.expires_at = Date.now() + d.expires_in * 1000;
-                    if (d.refresh_token) a.refresh_token = d.refresh_token;
-                    localStorage.setItem(AUTH_KEY, JSON.stringify(a));
-                    return a.access_token;
-                }
-            } catch(e) { console.error("Refresh token selhal", e); }
-        }
-        
-        return null;
-    }
-
-    function checkAuth() {
-        getToken().then(token => {
-            if (!token) {
-                emptyState.innerHTML = `Nejsi přihlášený do Spotify.<br><button onclick="login()" style="margin-top: 20px; padding: 12px 24px; background: #1db954; color: #fff; border: none; border-radius: 30px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">Přihlásit se</button>`;
-                emptyState.style.display = 'block';
-                searchInput.disabled = true;
-                searchInput.placeholder = "Nejdřív se přihlas přes tlačítko...";
-                searchResults.style.display = 'none';
-                infoHud.style.display = 'none';
-            } else {
-                if (albums.length === 0) {
-                    emptyState.innerHTML = `Tvoje sbírka je prázdná.<br><span style="font-size: 16px; font-weight: normal; margin-top: 10px; display: block;">Vyhledej album vlevo nahoře.</span>`;
-                    emptyState.style.display = 'block';
-                }
-                searchInput.disabled = false;
-                searchInput.placeholder = "Hledat interpreta nebo album...";
-            }
-        });
-    }
-
-    // --- SEARCH LOGIC ---
-    let debounceTimeout;
-
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimeout);
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            loadingSpinner.style.display = 'none';
-            return;
-        }
-        
-        loadingSpinner.style.display = 'block';
-        debounceTimeout = setTimeout(() => executeSearch(query), 500);
+function loadAutoJSON() {
+  fetch('episodes.json?v=' + new Date().getTime())
+    .then(function(res){
+      if(res.ok) return res.json();
+      return {};
+    })
+    .then(function(data){
+      links = data || {};
+      render();
+    })
+    .catch(function(err){
+      render();
     });
+}
 
-    async function executeSearch(query) {
-        const token = await getToken();
-        if (!token) {
-            checkAuth();
-            return;
-        }
+function render(){
+  var html = "";
+  var lastSeason = localStorage.getItem(LAST_SEASON_KEY);
 
-        const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=album&limit=12`;
-        
-        try {
-            const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+  for(var i=0; i<SEASONS.length; i++) {
+    var s = SEASONS[i];
+    var seasonLabel = (s === 9) ? "9. SÉRIE (NOVÁ KREV)" : "SÉRIE " + s;
+    var isOpen = (String(s) === String(lastSeason)) ? " open" : "";
+    
+    html += '<button class="season-btn" id="btn-season-' + s + '" tabindex="0" onclick="toggleSeason(' + s + ')">' + 
+            '<span>' + seasonLabel + '</span>' +
+            '<span class="season-arrow">▼</span>' + 
+            '</button>';
             
-            if (!r.ok) { 
-                localStorage.removeItem(AUTH_KEY); 
-                checkAuth(); 
-                return; 
-            }
-            
-            const data = await r.json();
-            displayResults(data.albums?.items || []);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            loadingSpinner.style.display = 'none';
-        }
+    html += '<div id="season-' + s + '" class="season-wrapper' + isOpen + '">';
+    html += '<div class="season-content">';
+    
+    for(var j=0; j<EPISODES.length; j++){
+      var ep = EPISODES[j];
+      if(ep.s !== s) continue;
+      
+      var key = String(ep.id);
+      var hasLink = links[key] && links[key].trim().length > 0;
+      var seText = formatSE(ep.s, ep.e);
+      
+      html += '<article class="card" tabindex="0" data-ep="' + ep.id + '" onclick="playEpisode(' + ep.id + ')">' +
+        '<div class="ep">' + seText + '</div>' +
+        '<h3>' + ep.title + '</h3>' +
+        '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
+      '</article>';
+    }
+    
+    html += '</div></div>';
+  }
+  
+  $("container").innerHTML = html;
+}
+
+function toggleSeason(s) {
+  var targetDiv = $("season-" + s);
+  var isCurrentlyOpen = targetDiv.className.indexOf("open") !== -1;
+
+  for(var i=0; i<SEASONS.length; i++) {
+    var seasonDiv = $("season-" + SEASONS[i]);
+    if (seasonDiv) seasonDiv.className = "season-wrapper";
+  }
+
+  if (!isCurrentlyOpen) {
+    targetDiv.className = "season-wrapper open";
+    localStorage.setItem(LAST_SEASON_KEY, String(s));
+  } else {
+    localStorage.removeItem(LAST_SEASON_KEY);
+  }
+}
+
+function openAdmin(){
+  $("adminModal").className = "modal open";
+  var html = "";
+  for(var i=0; i<EPISODES.length; i++){
+    var ep = EPISODES[i];
+    var titleStr = formatSE(ep.s, ep.e) + " - " + ep.title;
+    html += '<option value="' + ep.id + '">' + titleStr + '</option>';
+  }
+  $("episodeSelect").innerHTML = html;
+  $("episodeSelect").onchange = loadSelected;
+  loadSelected();
+  $("episodeSelect").focus();
+}
+
+function closeAdmin(){
+  $("adminModal").className = "modal";
+  $("adminBtn").focus();
+}
+
+function loadSelected(){ 
+  var key = String($("episodeSelect").value);
+  $("urlInput").value = links[key] || ""; 
+}
+
+function saveLink(){
+  var n = String($("episodeSelect").value);
+  var url = $("urlInput").value.trim();
+  if(!url){ toast("Vlož nejdřív odkaz."); return; }
+  links[n] = url;
+  render(); 
+  toast("Dočasně uloženo.");
+}
+
+function playEpisode(id){
+  var key = String(id);
+  var ep = getEpisode(id);
+  
+  if(!links[key]){ 
+    openAdmin(); 
+    $("episodeSelect").value = id; 
+    loadSelected(); 
+    toast(formatSE(ep.s, ep.e) + " nemá odkaz."); 
+    return; 
+  }
+  
+  current = id; 
+  isPerformingSeek = false;
+  pendingSeekTarget = null;
+  $("skipIntroBtn").style.display = "none";
+  $("nextEpBtnClean").style.display = "none";
+
+  var v = $("video");
+  $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
+  v.src = links[key]; 
+  
+  document.body.className = "in-player";
+  $("player").className = "player open";
+  window.scrollTo(0, 0);
+
+  var savedTime = savedProgress[key];
+  if (savedTime && savedTime > 5) {
+    pendingResumeTime = savedTime;
+    $("resumeTimeStr").textContent = fmt(savedTime);
+    $("resumeCard").className = "resume-card show";
+    $("resumeOkBtn").focus();
+  } else {
+    pendingResumeTime = 0;
+    $("resumeCard").className = "resume-card";
+    v.play().catch(function(){});
+    $("playBtn").focus();
+  }
+
+  resetUIHide();
+}
+
+function confirmResume(shouldResume) {
+  $("resumeCard").className = "resume-card";
+  var v = $("video");
+  
+  if (shouldResume && pendingResumeTime > 0) {
+    var target = pendingResumeTime;
+    if (v.readyState >= 1) {
+      applySafeSeek(target);
+    } else {
+      var onMeta = function(){
+        v.removeEventListener("loadedmetadata", onMeta);
+        applySafeSeek(target);
+      };
+      v.addEventListener("loadedmetadata", onMeta);
+    }
+  } else {
+    v.play().catch(function(){});
+  }
+  
+  pendingResumeTime = 0;
+  resetUIHide();
+  $("playBtn").focus();
+}
+
+/* BEZPEČNÉ PŘETÁČENÍ */
+function applySafeSeek(targetTime) {
+  var v = $("video");
+  if (!v.duration) return;
+
+  var clampedTime = Math.max(0, Math.min(v.duration, targetTime));
+
+  if (isPerformingSeek) {
+    pendingSeekTarget = clampedTime;
+    return;
+  }
+
+  isPerformingSeek = true;
+  v.currentTime = clampedTime;
+}
+
+$("video").addEventListener("seeked", function(){
+  isPerformingSeek = false;
+  if (pendingSeekTarget !== null) {
+    var nextTarget = pendingSeekTarget;
+    pendingSeekTarget = null;
+    applySafeSeek(nextTarget);
+  }
+});
+
+function seekBy(s){
+  var v = $("video");
+  if(!v.duration) return;
+  var base = (pendingSeekTarget !== null) ? pendingSeekTarget : v.currentTime;
+  applySafeSeek(base + s);
+  resetUIHide();
+}
+
+function skipIntro(){
+  applySafeSeek(INTRO_THRESHOLD);
+  $("skipIntroBtn").style.display = "none";
+  resetUIHide();
+}
+
+function playNextEpisode(){
+  var nextId = current + 1;
+  if(links[String(nextId)]){
+    var nextEp = getEpisode(nextId);
+    if (nextEp) {
+      var seasonDiv = $("season-" + nextEp.s);
+      if (seasonDiv && seasonDiv.className.indexOf("open") === -1) {
+        toggleSeason(nextEp.s);
+      }
+    }
+    playEpisode(nextId);
+  } else {
+    toast("Žádná další epizoda nemá odkaz.");
+  }
+}
+
+function closePlayer(){ 
+  saveCurrentProgress();
+  
+  var v = $("video");
+  v.pause(); 
+  v.removeAttribute("src"); 
+  v.load(); 
+  
+  document.body.className = "";
+  $("player").className = "player";
+  
+  $("resumeCard").className = "resume-card";
+  $("skipIntroBtn").style.display = "none";
+  $("nextEpBtnClean").style.display = "none";
+  clearTimeout(hideTimer);
+  
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(function(){});
+  }
+  
+  var activeCard = document.querySelector('.card[data-ep="' + current + '"]');
+  if(activeCard) activeCard.focus();
+}
+
+function saveCurrentProgress() {
+  var v = $("video");
+  if (current && v.duration && v.currentTime > 5) {
+    if (v.duration - v.currentTime <= 15) {
+      delete savedProgress[String(current)];
+    } else {
+      savedProgress[String(current)] = Math.floor(v.currentTime);
+    }
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(savedProgress));
+  }
+}
+
+function togglePlay(){
+  var v = $("video"); 
+  v.paused ? v.play() : v.pause();
+}
+
+function toggleMute(){
+  var v = $("video");
+  v.muted = !v.muted;
+  $("muteBtn").textContent = v.muted ? "🔇" : "🔊";
+}
+
+function toggleFullscreen(){
+  var el = $("player");
+  var v = $("video");
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(function(){});
+  } else {
+    try {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    } catch(e){}
+  }
+}
+
+function fmt(s){
+  if(!isFinite(s) || isNaN(s)) return "0:00";
+  s = Math.max(0, Math.floor(s));
+  return Math.floor(s/60) + ":" + String(s%60 < 10 ? "0" + (s%60) : s%60);
+}
+
+/* TIMELINE PRO PC */
+var pContainer = $("progressContainer");
+var tooltip = $("tooltip");
+
+function updateSeek(e){
+  var v = $("video");
+  if(!v.duration) return;
+  var rect = pContainer.getBoundingClientRect();
+  var pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  
+  tooltip.style.left = (pos * 100) + "%";
+  tooltip.textContent = fmt(pos * v.duration);
+
+  if(isSeeking) {
+    $("progressBar").style.width = (pos * 100) + "%";
+  }
+}
+
+pContainer.addEventListener("mouseenter", function(){ tooltip.style.display = "block"; });
+pContainer.addEventListener("mouseleave", function(){ if(!isSeeking) tooltip.style.display = "none"; });
+
+pContainer.addEventListener("mousedown", function(e){
+  var v = $("video");
+  if(!v.duration) return;
+  isSeeking = true;
+  updateSeek(e);
+});
+
+window.addEventListener("mousemove", function(e){
+  if(isSeeking) {
+    updateSeek(e);
+  } else if(pContainer.contains(e.target)) {
+    updateSeek(e);
+  }
+});
+
+window.addEventListener("mouseup", function(e){
+  if(isSeeking) {
+    var v = $("video");
+    if(v.duration) {
+      var rect = pContainer.getBoundingClientRect();
+      var pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      applySafeSeek(pos * v.duration);
+    }
+    isSeeking = false;
+    tooltip.style.display = "none";
+  }
+});
+
+/* HLÍDÁNÍ ČASU PRO SKIP INTRO A DALŠÍ DÍL */
+$("video").addEventListener("timeupdate", function(){
+  var v = $("video");
+  if (!v.duration) return;
+
+  if(!isSeeking) {
+    $("progressBar").style.width = (v.currentTime / v.duration * 100) + "%";
+  }
+  $("time").textContent = fmt(v.currentTime) + " / " + fmt(v.duration);
+
+  saveCurrentProgress();
+
+  // 1. Přeskočit úvod: zobrazuje se POUZE před 3:15
+  if (v.currentTime < INTRO_THRESHOLD) {
+    $("skipIntroBtn").style.display = "block";
+  } else {
+    $("skipIntroBtn").style.display = "none";
+  }
+
+  // 2. Další díl: zobrazuje se 50 sekund před koncem (pokud existuje další díl)
+  var timeLeft = v.duration - v.currentTime;
+  var nextId = current + 1;
+  var hasNextEpisode = !!links[String(nextId)];
+
+  if (hasNextEpisode && timeLeft <= NEXT_EPISODE_TRIGGER && timeLeft > 0) {
+    $("nextEpBtnClean").style.display = "block";
+  } else {
+    $("nextEpBtnClean").style.display = "none";
+  }
+});
+
+$("video").addEventListener("ended", function(){
+  delete savedProgress[String(current)];
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(savedProgress));
+  
+  if (links[String(current + 1)]) playNextEpisode();
+});
+
+$("video").addEventListener("play", function(){ 
+  $("playBtn").textContent = "Ⅱ"; 
+  $("bigPlayBtn").textContent = "Ⅱ"; 
+});
+
+$("video").addEventListener("pause", function(){ 
+  $("playBtn").textContent = "▶"; 
+  $("bigPlayBtn").textContent = "▶"; 
+});
+
+$("videoWrap").addEventListener("click", function(e){
+  if (e.target.closest('.player-ui') || e.target.closest('.player-top') || e.target.closest('.resume-card') || e.target.closest('.touch-overlay-controls') || e.target.closest('.skip-intro-btn') || e.target.closest('.next-ep-btn-clean')) return;
+  
+  if (clickTimer == null) {
+    clickTimer = setTimeout(function() {
+      clickTimer = null;
+      togglePlay();
+      resetUIHide();
+    }, 250);
+  } else {
+    clearTimeout(clickTimer);
+    clickTimer = null;
+    toggleFullscreen();
+    resetUIHide();
+  }
+});
+
+$("player").addEventListener("mousemove", resetUIHide);
+
+document.addEventListener("keydown", function(e){
+  var isPlayerOpen = $("player").className.indexOf("open") !== -1;
+
+  if (e.key === "Escape" || e.key === "Backspace") {
+    if(isPlayerOpen) {
+      e.preventDefault();
+      closePlayer();
+    } else if($("adminModal").className.indexOf("open") !== -1) {
+      e.preventDefault();
+      closeAdmin();
+    }
+    return;
+  }
+
+  if (isPlayerOpen) {
+    if ($("resumeCard").className.indexOf("show") !== -1) {
+      if (e.key === "ArrowLeft") $("resumeOkBtn").focus();
+      if (e.key === "ArrowRight") $("resumeNoBtn").focus();
+      return;
     }
 
-    function displayResults(results) {
-        searchResults.innerHTML = '';
-        if (results.length === 0) {
-            searchResults.innerHTML = '<div style="padding: 16px; color: #888; text-align: center;">Nic nebylo nalezeno.</div>';
-            searchResults.style.display = 'flex';
-            return;
-        }
-        
-        searchResults.style.display = 'flex';
+    resetUIHide();
 
-        results.forEach(album => {
-            const item = document.createElement('div');
-            item.className = 'result-item';
-            
-            const cover = album.images[0]?.url || '';
-            const year = album.release_date ? album.release_date.split('-')[0] : 'Neznámý rok';
-            const artistName = album.artists.map(a => a.name).join(', ');
+    if (e.key === " ") { e.preventDefault(); togglePlay(); }
+    else if (e.key === "ArrowLeft") seekBy(-10);
+    else if (e.key === "ArrowRight") seekBy(10);
+    else if (e.key === "m" || e.key === "M") toggleMute();
+    else if (e.key === "f" || e.key === "F") toggleFullscreen();
+  }
+});
 
-            item.innerHTML = `
-                <img src="${cover}" alt="cover">
-                <div class="result-info">
-                    <div class="result-title">${album.name}</div>
-                    <div class="result-artist">${artistName} • ${year}</div>
-                </div>
-                <div class="add-btn">+</div>
-            `;
+function resetUIHide(){
+  clearTimeout(hideTimer);
+  $("player").className = "player open";
+  if(!$("video").paused){
+    hideTimer = setTimeout(function(){
+      if(document.activeElement !== $("closePlayerBtn") && !isSeeking) {
+        $("player").className = "player open hide-ui";
+      }
+    }, 3500);
+  }
+}
 
-            item.addEventListener('click', () => {
-                fetchAlbumDetailsAndAdd(album.id, {
-                    title: album.name,
-                    artist: artistName,
-                    cover: cover,
-                    year: year
-                });
-                searchResults.style.display = 'none';
-                searchInput.value = '';
-            });
+function toast(t){
+  $("toast").textContent = t;
+  $("toast").style.display = "block";
+  setTimeout(function(){ $("toast").style.display = "none"; }, 1800);
+}
 
-            searchResults.appendChild(item);
-        });
-    }
-
-    // --- FETCH DETAILS & PREVIEW URL ---
-    async function fetchAlbumDetailsAndAdd(albumId, basicData) {
-        const token = await getToken();
-        const url = `https://api.spotify.com/v1/albums/${albumId}`;
-        
-        try {
-            const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
-            if (!r.ok) {
-                localStorage.removeItem(AUTH_KEY);
-                checkAuth();
-                return;
-            }
-            const data = await r.json();
-            
-            basicData.trackCount = data.total_tracks;
-            
-            let totalTimeMs = 0;
-            let previewUrl = null;
-
-            data.tracks.items.forEach(item => {
-                totalTimeMs += item.duration_ms;
-                if (!previewUrl && item.preview_url) {
-                    previewUrl = item.preview_url;
-                }
-            });
-            
-            basicData.previewUrl = previewUrl;
-            const totalMinutes = Math.floor(totalTimeMs / 60000);
-            basicData.duration = totalMinutes > 0 ? `${totalMinutes} min` : '? min';
-        } catch (error) {
-            basicData.duration = "? min";
-            basicData.trackCount = "?";
-            basicData.previewUrl = null;
-        }
-
-        // Nově přidané album jde na začátek (unshift) místo na konec (push)
-        albums.unshift(basicData);
-        saveAlbums();
-        activeIndex = 0; // Focus hned na novou položku
-        renderRack();
-    }
-
-    // --- AUDIO CONTROL LOGIC ---
-    function playPreview(url) {
-        clearInterval(fadeInterval);
-        
-        if (!url) {
-            let vol = audioPlayer.volume;
-            fadeInterval = setInterval(() => {
-                vol = Math.max(0, vol - 0.1);
-                audioPlayer.volume = vol;
-                if (vol <= 0) {
-                    clearInterval(fadeInterval);
-                    audioPlayer.pause();
-                }
-            }, 50);
-            return;
-        }
-
-        if (audioPlayer.src !== url) {
-            audioPlayer.src = url;
-        }
-        
-        audioPlayer.volume = 0;
-        
-        audioPlayer.play().then(() => {
-            let vol = 0;
-            fadeInterval = setInterval(() => {
-                vol = Math.min(1, vol + 0.08);
-                audioPlayer.volume = vol;
-                
-                if (vol >= 1) {
-                    clearInterval(fadeInterval);
-                    
-                    setTimeout(() => {
-                        let downVol = 1.0;
-                        fadeInterval = setInterval(() => {
-                            downVol = Math.max(0.3, downVol - 0.05);
-                            audioPlayer.volume = downVol;
-                            if (downVol <= 0.3) clearInterval(fadeInterval);
-                        }, 80);
-                    }, 1500); 
-                }
-            }, 50);
-        }).catch(err => {
-            console.log("Přehrání blokováno prohlížečem, dokud uživatel neklikne do okna:", err);
-        });
-    }
-
-    // --- 3D MOVEMENT LOGIC ---
-    let scrollAccumulator = 0;
-    let clearAccTimeout;
-    const scrollThreshold = 70; 
-
-    function updateScene() {
-        if (albums.length === 0) {
-            return;
-        }
-
-        const dynamicCenterIndex = (albums.length - 1) / 2;
-        const currentAlbum = albums[activeIndex];
-
-        albumIndexEl.innerText = `${(activeIndex + 1).toString().padStart(2, '0')} / ${albums.length.toString().padStart(2, '0')}`;
-        albumTitleEl.innerText = currentAlbum.title;
-        
-        // Zobrazí text POUZE tehdy, pokud ukázka reálně existuje. "Ukázka nedostupná" bylo odstraněno.
-        let audioStatusHTML = "";
-        if (currentAlbum.previewUrl) {
-            audioStatusHTML = `<br><span style="color: #1db954; font-size: 14px; margin-top: 8px; display: inline-block; font-weight: bold;">🔊 Hraje ukázka</span>`;
-        }
-        albumMetaEl.innerHTML = `${currentAlbum.artist} • ${currentAlbum.year} • ${currentAlbum.trackCount} skladeb • ${currentAlbum.duration} ${audioStatusHTML}`;
-
-        if (currentPreviewUrl !== currentAlbum.previewUrl) {
-            currentPreviewUrl = currentAlbum.previewUrl;
-            playPreview(currentPreviewUrl);
-        }
-
-        cdElements.forEach(({ el, index }) => {
-            const baseZ = (index - dynamicCenterIndex) * -spacingZ;
-            let slideX = index === activeIndex ? 180 : 0;
-            el.style.transform = `translate3d(${slideX}px, 0px, ${baseZ}px)`;
-        });
-    }
-
-    window.addEventListener('wheel', (e) => {
-        if(albums.length === 0) return;
-        
-        clearTimeout(clearAccTimeout);
-        scrollAccumulator += e.deltaY;
-        let steps = 0;
-
-        while (scrollAccumulator >= scrollThreshold) { steps++; scrollAccumulator -= scrollThreshold; }
-        while (scrollAccumulator <= -scrollThreshold) { steps--; scrollAccumulator += scrollThreshold; }
-
-        if (steps !== 0) {
-            let prevIndex = activeIndex;
-            activeIndex += steps;
-            if (activeIndex < 0) activeIndex = 0;
-            if (activeIndex >= albums.length) activeIndex = albums.length - 1;
-            
-            // Přehrání zvuku kliknutí pouze při reálné změně alba
-            if (prevIndex !== activeIndex) {
-                playTickSound();
-                updateScene();
-            }
-        }
-
-        clearAccTimeout = setTimeout(() => { scrollAccumulator = 0; }, 50);
-    });
-
-    window.addEventListener('keydown', (e) => {
-        if(albums.length === 0) return;
-
-        let prevIndex = activeIndex;
-        if (e.key === 'ArrowDown' && activeIndex < albums.length - 1) {
-            activeIndex++;
-        } else if (e.key === 'ArrowUp' && activeIndex > 0) {
-            activeIndex--;
-        }
-
-        if (prevIndex !== activeIndex) {
-            playTickSound();
-            updateScene();
-        }
-    });
-
-    // Start aplikace
-    loadAlbums();
-    finishAuth().then(() => checkAuth());
+loadAutoJSON();
 </script>
 </body>
 </html>
