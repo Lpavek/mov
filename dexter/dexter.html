@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#070707; --panel:#141414; --text:#f2f2f2;
-  --muted:#8f8f8f; --red:#e51a1a; --line:#292929;
+  --muted:#8f8f8f; --red:#e51a1a; --blue:#2563eb; --line:#292929;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;user-select:none;width:100%;height:100%;overflow-x:hidden}
@@ -119,6 +119,16 @@ body.in-player .admin {
 .video-wrap{position:relative;width:100%;height:100%;flex:1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 video{width:100%;height:100%;object-fit:contain;background:#000}
 
+/* Vzhled titulků pro TV i PC */
+::cue {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 26px;
+  text-shadow: 2px 2px 4px #000;
+  font-weight: 600;
+}
+
 /* VELKÁ TLAČÍTKA PRO KURZOR TV */
 .touch-overlay-controls {
   position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center;
@@ -135,7 +145,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .big-touch-btn:hover, .big-touch-btn:focus { transform: scale(1.15); background: var(--red); }
 .big-touch-btn.center { width: 90px; height: 90px; font-size: 28px; }
 
-/* NENÁPADNÉ TLAČÍTKO PŘESKOČIT ÚVOD (VLEVO) */
+/* NENÁPADNÉ TLAČÍTKO PŘESKOČIT ÚVOD */
 .skip-intro-btn {
   position: absolute; left: 4vw; bottom: 100px; z-index: 160;
   background: rgba(18, 18, 18, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
@@ -148,7 +158,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 }
 .player.hide-ui .skip-intro-btn { opacity: 0; pointer-events: none; }
 
-/* TLAČÍTKO DALŠÍ DÍL (VPRAVO, 50s PŘED KONCEM) */
+/* TLAČÍTKO DALŠÍ DÍL */
 .next-ep-btn-clean {
   position: absolute; right: 4vw; bottom: 100px; z-index: 160;
   background: rgba(18, 18, 18, 0.85); border: 2px solid var(--red);
@@ -210,8 +220,10 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 }
 
 .controls{display:flex;align-items:center;gap:12px}
-.ctrl{width:50px;height:44px;border:2px solid transparent;border-radius:6px;background:rgba(30,30,30,.9);color:#fff;font-size:18px; cursor:pointer;}
-.ctrl:hover{background:#333}
+.ctrl{width:50px;height:44px;border:2px solid transparent;border-radius:6px;background:rgba(30,30,30,.9);color:#fff;font-size:18px; cursor:pointer; font-weight: bold;}
+.ctrl:hover, .ctrl:focus{background:#333}
+.ctrl.active{background:var(--blue);border-color:var(--blue)}
+.ctrl.hidden{display:none}
 .time{font-variant-numeric:tabular-nums;color:#ddd;font-size:15px;margin:0 8px;font-weight:700}
 .spacer{flex:1}
 
@@ -308,6 +320,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
         <button class="ctrl" id="seekForwardBtn" tabindex="0" onclick="seekBy(10)">↷</button>
         <span class="time" id="time">0:00 / 0:00</span>
         <span class="spacer"></span>
+        <button class="ctrl hidden" id="ccBtn" tabindex="0" onclick="toggleCC()" title="Titulky (CC)">CC</button>
         <button class="ctrl" id="muteBtn" tabindex="0" onclick="toggleMute()">🔊</button>
         <button class="ctrl" id="fullBtn" tabindex="0" onclick="toggleFullscreen()">⛶ Maximovat</button>
       </div>
@@ -342,8 +355,8 @@ var EPISODES = [
 ];
 
 var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-var INTRO_THRESHOLD = 195; // 3 minuty a 15 sekund (3 * 60 + 15 = 195s)
-var NEXT_EPISODE_TRIGGER = 50; // 50 sekund před koncem
+var INTRO_THRESHOLD = 195;
+var NEXT_EPISODE_TRIGGER = 50;
 var PROGRESS_KEY = "dexter_saved_progress_v1";
 var LAST_SEASON_KEY = "dexter_last_opened_season";
 
@@ -359,12 +372,19 @@ var pendingResumeTime = 0;
 function $(id){ return document.getElementById(id); }
 
 function formatSE(s, e){
-  // Pro Vzkříšení (s10 a s11) upravíme zobrazení zpět na S01 / S02
   var realS = s;
   if(s === 10) realS = 1;
   if(s === 11) realS = 2;
-  
   return "S" + (realS < 10 ? "0" + realS : realS) + "E" + (e < 10 ? "0" + e : e);
+}
+
+// Identifikace souboru titulků podle série a dílu
+function getSubtitlePath(ep) {
+  var eStr = (ep.e < 10 ? "0" + ep.e : String(ep.e));
+  if (ep.s === 10) return "titulky/V01" + eStr + ".vtt";
+  if (ep.s === 11) return "titulky/V02" + eStr + ".vtt";
+  var sStr = (ep.s < 10 ? "0" + ep.s : String(ep.s));
+  return "titulky/S" + sStr + eStr + ".vtt";
 }
 
 function getEpisode(id) {
@@ -395,8 +415,6 @@ function render(){
 
   for(var i=0; i<SEASONS.length; i++) {
     var s = SEASONS[i];
-    
-    // Názvy sérií
     var seasonLabel = "SÉRIE " + s;
     if(s === 9) seasonLabel = "9. SÉRIE (NOVÁ KREV)";
     if(s === 10) seasonLabel = "VZKŘÍŠENÍ (1. SÉRIE)";
@@ -412,7 +430,6 @@ function render(){
     html += '<div id="season-' + s + '" class="season-wrapper' + isOpen + '">';
     html += '<div class="season-content">';
     
-    // Filtrujeme epizody pro aktuální sérii
     var seasonEpisodes = EPISODES.filter(function(ep){ return ep.s === s; });
     
     if(seasonEpisodes.length === 0) {
@@ -508,7 +525,37 @@ function playEpisode(id){
 
   var v = $("video");
   $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
-  v.src = links[key]; 
+  v.src = links[key];
+
+  // Odstranění předchozích stop titulků
+  var oldTrack = document.getElementById("dynSubTrack");
+  if(oldTrack) oldTrack.remove();
+  $("ccBtn").className = "ctrl hidden";
+
+  // Automatická detekce a načtení titulků ze složky titulky/
+  var subUrl = getSubtitlePath(ep);
+  fetch(subUrl + '?v=' + new Date().getTime())
+    .then(function(res){
+      if(!res.ok) throw new Error("Titulky nenalezeny");
+      return res.text();
+    })
+    .then(function(vttContent){
+      if(vttContent && vttContent.trim().length > 0){
+        var blob = new Blob([vttContent], { type: 'text/vtt' });
+        var track = document.createElement("track");
+        track.id = "dynSubTrack";
+        track.kind = "subtitles";
+        track.label = "Čeština";
+        track.srclang = "cs";
+        track.src = URL.createObjectURL(blob);
+        track.default = true;
+        v.appendChild(track);
+        $("ccBtn").className = "ctrl active"; // Zobrazit CC tlačítko
+      }
+    })
+    .catch(function(){
+      $("ccBtn").className = "ctrl hidden";
+    });
   
   document.body.className = "in-player";
   $("player").className = "player open";
@@ -606,6 +653,24 @@ function playNextEpisode(){
     playEpisode(nextId);
   } else {
     toast("Žádná další epizoda nemá odkaz.");
+  }
+}
+
+function toggleCC() {
+  var v = $("video");
+  if (!v.textTracks || v.textTracks.length === 0) {
+    toast("Tento díl nemá externí titulky.");
+    return;
+  }
+  var track = v.textTracks[0];
+  if (track.mode === "showing") {
+    track.mode = "hidden";
+    $("ccBtn").className = "ctrl";
+    toast("Titulky vypnuty");
+  } else {
+    track.mode = "showing";
+    $("ccBtn").className = "ctrl active";
+    toast("Titulky zapnuty");
   }
 }
 
@@ -817,6 +882,7 @@ document.addEventListener("keydown", function(e){
     else if (e.key === "ArrowRight") seekBy(10);
     else if (e.key === "m" || e.key === "M") toggleMute();
     else if (e.key === "f" || e.key === "F") toggleFullscreen();
+    else if (e.key === "c" || e.key === "C") toggleCC();
   }
 });
 
