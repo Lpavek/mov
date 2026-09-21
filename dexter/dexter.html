@@ -67,6 +67,17 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
   display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px;
 }
 
+.empty-season-msg {
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: bold;
+  padding: 20px;
+  text-align: center;
+  grid-column: 1 / -1;
+  border: 2px dashed var(--line);
+  border-radius: 8px;
+}
+
 .card{
   background:var(--panel);border:2px solid var(--line); cursor:pointer;
   border-radius:8px;padding:20px;min-height:150px;transition:transform 0.15s, border-color 0.15s;
@@ -325,10 +336,12 @@ var EPISODES = [
   /* 8. Série */
   {id:85, s:8, e:1, title:"Nádhernej den"}, {id:86, s:8, e:2, title:"Není nebe bez mráčku..."}, {id:87, s:8, e:3, title:"Co žere Dextera Morgana?"}, {id:88, s:8, e:4, title:"Zjizvená tkáň"}, {id:89, s:8, e:5, title:"Vařila myšička kašičku"}, {id:90, s:8, e:6, title:"Kousek sebe"}, {id:91, s:8, e:7, title:"Kodex oblékání"}, {id:92, s:8, e:8, title:"Už tam budem?"}, {id:93, s:8, e:9, title:"Ohraná písnička"}, {id:94, s:8, e:10, title:"Sbohem, Miami"}, {id:95, s:8, e:11, title:"Ten starý Dexter"}, {id:96, s:8, e:12, title:"Pamatuješ si ty zrůdy?"},
   /* 9. Série (Nová krev) */
-  {id:97, s:9, e:1, title:"Studený start"}, {id:98, s:9, e:2, title:"Průtrž průserů"}, {id:99, s:9, e:3, title:"Kouřové signály"}, {id:100, s:9, e:4, title:"H jako hrdina"}, {id:101, s:9, e:5, title:"Na útěku"}, {id:102, s:9, e:6, title:"Příliš mnoho tuňákových sendvičů"}, {id:103, s:9, e:7, title:"S kůží na trh"}, {id:104, s:9, e:8, title:"Nefér hra"}, {id:105, s:9, e:9, title:"Zůstane to v rodině"}, {id:106, s:9, e:10, title:"Otcovy hříchy"}
+  {id:97, s:9, e:1, title:"Studený start"}, {id:98, s:9, e:2, title:"Průtrž průserů"}, {id:99, s:9, e:3, title:"Kouřové signály"}, {id:100, s:9, e:4, title:"H jako hrdina"}, {id:101, s:9, e:5, title:"Na útěku"}, {id:102, s:9, e:6, title:"Příliš mnoho tuňákových sendvičů"}, {id:103, s:9, e:7, title:"S kůží na trh"}, {id:104, s:9, e:8, title:"Nefér hra"}, {id:105, s:9, e:9, title:"Zůstane to v rodině"}, {id:106, s:9, e:10, title:"Otcovy hříchy"},
+  /* 10. Série (Vzkříšení 1. série) */
+  {id:107, s:10, e:1, title:"Tlukoucí srdce…"}, {id:108, s:10, e:2, title:"Stydlivý před fotoaparátem"}, {id:109, s:10, e:3, title:"Kecal, který mluví do řízení"}, {id:110, s:10, e:4, title:"Říkej mi rudý"}, {id:111, s:10, e:5, title:"Nadržený na vraždu"}, {id:112, s:10, e:6, title:"Kočky a myš"}, {id:113, s:10, e:7, title:"Korekce kurzu"}, {id:114, s:10, e:8, title:"Místnost, kde se zabíjí"}, {id:115, s:10, e:9, title:"Dotčen andělem"}, {id:116, s:10, e:10, title:"A spravedlnost pro všechny…"}
 ];
 
-var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var SEASONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 var INTRO_THRESHOLD = 195; // 3 minuty a 15 sekund (3 * 60 + 15 = 195s)
 var NEXT_EPISODE_TRIGGER = 50; // 50 sekund před koncem
 var PROGRESS_KEY = "dexter_saved_progress_v1";
@@ -346,7 +359,12 @@ var pendingResumeTime = 0;
 function $(id){ return document.getElementById(id); }
 
 function formatSE(s, e){
-  return "S" + (s < 10 ? "0" + s : s) + "E" + (e < 10 ? "0" + e : e);
+  // Pro Vzkříšení (s10 a s11) upravíme zobrazení zpět na S01 / S02
+  var realS = s;
+  if(s === 10) realS = 1;
+  if(s === 11) realS = 2;
+  
+  return "S" + (realS < 10 ? "0" + realS : realS) + "E" + (e < 10 ? "0" + e : e);
 }
 
 function getEpisode(id) {
@@ -377,7 +395,13 @@ function render(){
 
   for(var i=0; i<SEASONS.length; i++) {
     var s = SEASONS[i];
-    var seasonLabel = (s === 9) ? "9. SÉRIE (NOVÁ KREV)" : "SÉRIE " + s;
+    
+    // Názvy sérií
+    var seasonLabel = "SÉRIE " + s;
+    if(s === 9) seasonLabel = "9. SÉRIE (NOVÁ KREV)";
+    if(s === 10) seasonLabel = "VZKŘÍŠENÍ (1. SÉRIE)";
+    if(s === 11) seasonLabel = "VZKŘÍŠENÍ (2. SÉRIE)";
+    
     var isOpen = (String(s) === String(lastSeason)) ? " open" : "";
     
     html += '<button class="season-btn" id="btn-season-' + s + '" tabindex="0" onclick="toggleSeason(' + s + ')">' + 
@@ -388,19 +412,24 @@ function render(){
     html += '<div id="season-' + s + '" class="season-wrapper' + isOpen + '">';
     html += '<div class="season-content">';
     
-    for(var j=0; j<EPISODES.length; j++){
-      var ep = EPISODES[j];
-      if(ep.s !== s) continue;
-      
-      var key = String(ep.id);
-      var hasLink = links[key] && links[key].trim().length > 0;
-      var seText = formatSE(ep.s, ep.e);
-      
-      html += '<article class="card" tabindex="0" data-ep="' + ep.id + '" onclick="playEpisode(' + ep.id + ')">' +
-        '<div class="ep">' + seText + '</div>' +
-        '<h3>' + ep.title + '</h3>' +
-        '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
-      '</article>';
+    // Filtrujeme epizody pro aktuální sérii
+    var seasonEpisodes = EPISODES.filter(function(ep){ return ep.s === s; });
+    
+    if(seasonEpisodes.length === 0) {
+      html += '<div class="empty-season-msg">Tato série zatím neobsahuje žádné epizody.</div>';
+    } else {
+      for(var j=0; j<seasonEpisodes.length; j++){
+        var ep = seasonEpisodes[j];
+        var key = String(ep.id);
+        var hasLink = links[key] && links[key].trim().length > 0;
+        var seText = formatSE(ep.s, ep.e);
+        
+        html += '<article class="card" tabindex="0" data-ep="' + ep.id + '" onclick="playEpisode(' + ep.id + ')">' +
+          '<div class="ep">' + seText + '</div>' +
+          '<h3>' + ep.title + '</h3>' +
+          '<button class="play" tabindex="-1">' + (hasLink ? "▶ Přehrát" : "○ Bez odkazu") + '</button>' +
+        '</article>';
+      }
     }
     
     html += '</div></div>';
