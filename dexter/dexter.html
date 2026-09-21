@@ -119,12 +119,14 @@ body.in-player .admin {
 .video-wrap{position:relative;width:100%;height:100%;flex:1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 video{width:100%;height:100%;object-fit:contain;background:#000}
 
-/* Plovoucí přetahovatelné titulky pro PC i TV */
+/* Plovoucí přetahovatelné titulky vycentrované na střed */
 .custom-subtitles {
   position: absolute;
   bottom: 85px;
   left: 50%;
   transform: translateX(-50%);
+  width: fit-content;
+  max-width: 85%;
   background: rgba(0, 0, 0, 0.78);
   color: #fff;
   font-family: Arial, sans-serif;
@@ -138,7 +140,6 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   z-index: 180;
   cursor: grab;
   user-select: none;
-  max-width: 85%;
   pointer-events: auto;
   white-space: pre-wrap;
   display: none;
@@ -169,7 +170,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .big-touch-btn:hover, .big-touch-btn:focus { transform: scale(1.15); background: var(--red); }
 .big-touch-btn.center { width: 90px; height: 90px; font-size: 28px; }
 
-/* NENÁPADNÉ TLAČÍTKO PŘESKOČIT ÚVOD */
+/* TLAČÍTKO PŘESKOČIT ÚVOD */
 .skip-intro-btn {
   position: absolute; left: 4vw; bottom: 100px; z-index: 160;
   background: rgba(18, 18, 18, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
@@ -587,7 +588,7 @@ function playEpisode(id){
   $("now").textContent = formatSE(ep.s, ep.e) + " - " + ep.title;
   v.src = links[key];
 
-  // Odstranění předchozích stop a reset vrstvy titulků
+  // Reset stop a vrstvy titulků
   var oldTrack = document.getElementById("dynSubTrack");
   if(oldTrack) oldTrack.remove();
   currentSubTrack = null;
@@ -596,7 +597,7 @@ function playEpisode(id){
   $("ccBtn").className = "ctrl hidden";
   resetSubtitlePosition();
 
-  // Detekce a stažení titulků (s podporou Drag & Drop)
+  // Načtení titulků a napojení na plovoucí vrstvu
   var subUrl = getSubtitlePath(ep);
   fetch(subUrl + '?v=' + new Date().getTime())
     .then(function(res){
@@ -616,7 +617,7 @@ function playEpisode(id){
         
         track.addEventListener("load", function() {
           currentSubTrack = this.track;
-          currentSubTrack.mode = "hidden"; // Skryje nativní vykreslení, aby se nekryly s naší plovoucí vrstvou
+          currentSubTrack.mode = "hidden"; // Skryje nativní vykreslení
           currentSubTrack.oncuechange = function() {
             updateSubtitlesDisplay(this);
           };
@@ -913,10 +914,10 @@ $("video").addEventListener("pause", function(){
   $("bigPlayBtn").textContent = "▶"; 
 });
 
-/* DRAG & DROP LOGIKA PRO TITULKY (PC MYŠ) */
+/* DRAG & DROP LOGIKA PRO TITULKY (VYCENTROVÁNO NA STŘED) */
 var subEl = $("subtitlesOverlay");
 var isDraggingSub = false;
-var subStartX, subStartY, subInitialLeft, subInitialTop;
+var subStartX, subStartY, subInitialCenterX, subInitialTop;
 
 subEl.addEventListener("mousedown", function(e) {
   if (e.button !== 0) return; // Pouze levé tlačítko
@@ -926,16 +927,20 @@ subEl.addEventListener("mousedown", function(e) {
   var rect = subEl.getBoundingClientRect();
   var parentRect = $("videoWrap").getBoundingClientRect();
   
-  // Přepnutí ze středu na přesné souřadnice px
+  // Vypočítáme aktuální STŘED titulků
+  var currentCenterX = (rect.left + (rect.width / 2)) - parentRect.left;
+  var currentTop = rect.top - parentRect.top;
+  
+  // Ukotvení na střed přes translateX(-50%)
   subEl.style.bottom = "auto";
-  subEl.style.transform = "none";
-  subEl.style.left = (rect.left - parentRect.left) + "px";
-  subEl.style.top = (rect.top - parentRect.top) + "px";
+  subEl.style.left = currentCenterX + "px";
+  subEl.style.top = currentTop + "px";
+  subEl.style.transform = "translateX(-50%)";
   
   subStartX = e.clientX;
   subStartY = e.clientY;
-  subInitialLeft = rect.left - parentRect.left;
-  subInitialTop = rect.top - parentRect.top;
+  subInitialCenterX = currentCenterX;
+  subInitialTop = currentTop;
   
   e.preventDefault();
   e.stopPropagation();
@@ -949,14 +954,15 @@ window.addEventListener("mousemove", function(e) {
   var parentRect = $("videoWrap").getBoundingClientRect();
   var subRect = subEl.getBoundingClientRect();
   
-  var newLeft = subInitialLeft + dx;
+  var newCenterX = subInitialCenterX + dx;
   var newTop = subInitialTop + dy;
   
-  // Zamezení úniku titulků z obrazu
-  newLeft = Math.max(10, Math.min(parentRect.width - subRect.width - 10, newLeft));
+  // Omezení v rámci obrazovky
+  var halfWidth = subRect.width / 2;
+  newCenterX = Math.max(halfWidth + 10, Math.min(parentRect.width - halfWidth - 10, newCenterX));
   newTop = Math.max(10, Math.min(parentRect.height - subRect.height - 10, newTop));
   
-  subEl.style.left = newLeft + "px";
+  subEl.style.left = newCenterX + "px";
   subEl.style.top = newTop + "px";
 });
 
@@ -967,7 +973,7 @@ window.addEventListener("mouseup", function() {
   }
 });
 
-// Dvojklik vrátí titulky na původní místo dolů
+// Dvojklik vrátí titulky zpět dolů na střed
 subEl.addEventListener("dblclick", function(e) {
   e.stopPropagation();
   resetSubtitlePosition();
