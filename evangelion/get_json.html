@@ -6,8 +6,14 @@
 <title>JSON Export Studio - Evangelion</title>
 <style>
 :root{
-  --bg:#0e0e11; --panel:#17171e; --text:#e3e3e8;
-  --muted:#8e8e99; --red:#e51a1a; --line:#262633;
+  --bg: #05040a; 
+  --panel: #110e18; 
+  --text: #e3e3e8;
+  --muted: #8e8e99; 
+  --eva-green: #54ff00; 
+  --eva-purple: #7533e6; 
+  --eva-orange: #ff7b00;
+  --line: #221d33;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;}
@@ -16,11 +22,11 @@ button,input,select{font:inherit}
 button{cursor:pointer}
 
 .hero{
-  padding:30px 5vw 20px; background:#13131a; border-bottom:1px solid var(--line);
+  padding:30px 5vw 20px; background:#0a0812; border-bottom:1px solid var(--eva-purple);
   display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;
 }
-.brand{font-weight:900;letter-spacing:.15em;font-size:12px;color:var(--red)}
-.hero h1{font-size:28px;margin:6px 0;text-transform:uppercase;letter-spacing:-.02em}
+.brand{font-weight:900;letter-spacing:.15em;font-size:12px;color:var(--eva-green)}
+.hero h1{font-family: "Times New Roman", Times, serif; font-size:28px;margin:6px 0;text-transform:uppercase;letter-spacing:0.02em; text-shadow: 2px 2px 0px rgba(117, 51, 230, 0.5);}
 
 .hero-actions {
   display: flex;
@@ -32,13 +38,13 @@ button{cursor:pointer}
 
 /* AKORDEON */
 .season-btn {
-  width: 100%; text-align: left; background: #181820; border: 1px solid var(--line);
+  width: 100%; text-align: left; background: #15111f; border: 1px solid var(--line);
   color: #fff; padding: 16px 20px; font-size: 18px; font-weight: 800; text-transform: uppercase;
   border-radius: 10px; margin-bottom: 10px; transition: 0.2s;
   display: flex; justify-content: space-between; align-items: center;
 }
-.season-btn:hover { background: #20202b; border-color: #3b3b4f; }
-.season-arrow { transition: transform 0.3s ease; font-size: 14px; color: var(--muted); }
+.season-btn:hover { background: #1e192e; border-color: var(--eva-purple); }
+.season-arrow { transition: transform 0.3s ease; font-size: 14px; color: var(--eva-green); }
 .season-wrapper.open ~ .season-btn .season-arrow { transform: rotate(180deg); }
 
 .season-wrapper {
@@ -57,12 +63,12 @@ button{cursor:pointer}
   border-radius:10px;padding:16px;transition:0.15s;
   display:flex;flex-direction:column;justify-content:space-between; min-height: 100px;
 }
-.card:hover { border-color: #4f4f66; background: #1e1e28; }
-.card.has-link { border-color: #2ea043; background: rgba(46, 160, 67, 0.08); }
-.ep{color:var(--red);font-size:12px;font-weight:900;}
+.card:hover { border-color: var(--eva-purple); background: #1e192e; }
+.card.has-link { border-color: var(--eva-green); background: rgba(84, 255, 0, 0.08); }
+.ep{color:var(--eva-green);font-size:12px;font-weight:900; letter-spacing: 1px;}
 .card h3{margin:4px 0 10px;font-size:15px; color:#fff;}
 .status{font-size: 12px; font-weight: bold; color: var(--muted);}
-.card.has-link .status { color: #3fb950; }
+.card.has-link .status { color: var(--eva-green); }
 
 .empty-season-msg {
   color: var(--muted);
@@ -80,48 +86,48 @@ button{cursor:pointer}
   margin-top: 40px;
 }
 .code-block-wrapper h2 {
-  font-size: 18px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  font-size: 18px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--eva-green);
 }
 .code-block {
-  background: #121318; border: 1px solid #2d2f3a; border-radius: 14px;
+  background: #0a0812; border: 1px solid var(--eva-purple); border-radius: 14px;
   overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 .code-header {
-  background: #1a1b22; padding: 12px 20px; border-bottom: 1px solid #2d2f3a;
-  display: flex; justify-content: space-between; align-items: center; color: #a0a0b0; font-size: 13px; font-weight: 700;
+  background: #110e18; padding: 12px 20px; border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center; color: var(--eva-green); font-size: 13px; font-weight: 700;
 }
 .code-controls {
   display: flex; gap: 8px;
 }
 .btn-tool {
-  background: #252733; border: 1px solid #3d4052; color: #e3e3e8; border-radius: 8px;
+  background: #1e192e; border: 1px solid #3d3552; color: #e3e3e8; border-radius: 8px;
   padding: 6px 14px; font-size: 13px; transition: 0.2s; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none;
 }
-.btn-tool:hover { background: #323545; color: #fff; border-color: #52566e; }
-.btn-tool.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
+.btn-tool:hover { background: #2a2340; color: #fff; border-color: var(--eva-purple); }
+.btn-tool.danger:hover { background: var(--eva-orange); border-color: var(--eva-orange); color: #fff; }
 
 .code-content {
   padding: 20px; margin: 0; color: #e3e3e8; font-family: 'Courier New', Courier, monospace; font-size: 14px;
   white-space: pre; overflow-x: auto; line-height: 1.6; min-height: 80px;
 }
-.json-key { color: #f7768e; font-weight: bold; }
-.json-string { color: #9ece6a; word-break: break-all; }
-.json-bracket { color: #7aa2f7; }
+.json-key { color: var(--eva-green); font-weight: bold; }
+.json-string { color: #fff; word-break: break-all; }
+.json-bracket { color: var(--eva-purple); }
 
 /* MODAL */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;z-index:30;padding:20px;align-items:center;justify-content:center;}
+.modal{position:fixed;inset:0;background:rgba(5, 4, 10, .85);display:none;z-index:30;padding:20px;align-items:center;justify-content:center;}
 .modal.open{display:flex}
-.panel{width:min(600px,100%);background:#16171f;border:1px solid #333447;border-radius:14px;padding:25px}
-.panel h3{margin-top:0; font-size: 20px;}
+.panel{width:min(600px,100%);background:#110e18;border:1px solid var(--eva-purple);border-radius:14px;padding:25px}
+.panel h3{margin-top:0; font-size: 20px; color: var(--eva-green);}
 .formrow{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin:16px 0}
-input,select{width:100%;background:#0d0e12;color:#fff;border:1px solid #333447;border-radius:8px;padding:12px;font-size:14px}
-input:focus,select:focus{outline:none; border-color: var(--red);}
+input,select{width:100%;background:#05040a;color:#fff;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px}
+input:focus,select:focus{outline:none; border-color: var(--eva-green);}
 .actions{display:flex;gap:10px;margin-top:22px; justify-content: flex-end;}
-.action{border:0;border-radius:8px;padding:11px 20px;background:#2d2f3a;color:#fff;font-weight:800; font-size: 14px; cursor: pointer;}
-.action.red{background:var(--red);color:#fff}
-.action.green{background:#2ea043;color:#fff}
+.action{border:0;border-radius:8px;padding:11px 20px;background:#221d33;color:#fff;font-weight:800; font-size: 14px; cursor: pointer;}
+.action.primary{background:var(--eva-purple);color:#fff}
+.action.danger{background:var(--eva-orange);color:#fff}
 
-.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#fff;color:#000;padding:12px 24px;border-radius:8px;display:none;z-index:60;font-weight:800; box-shadow: 0 4px 15px rgba(0,0,0,0.4);}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--eva-green);color:#000;padding:12px 24px;border-radius:8px;display:none;z-index:60;font-weight:800; box-shadow: 0 4px 15px rgba(0,0,0,0.4);}
 </style>
 </head>
 <body>
@@ -163,8 +169,8 @@ input:focus,select:focus{outline:none; border-color: var(--red);}
     <div class="formrow"><label>Epizoda</label><select id="episodeSelect"></select></div>
     <div class="formrow"><label>Odkaz</label><input id="urlInput" placeholder="Vlož https://...mp4"></div>
     <div class="actions">
-      <button class="action green" onclick="saveLink()">Uložit</button>
-      <button class="action red" onclick="removeLink()">Smazat odkaz</button>
+      <button class="action primary" onclick="saveLink()">Uložit</button>
+      <button class="action danger" onclick="removeLink()">Smazat odkaz</button>
       <button class="action" onclick="closeAdmin()">Zavřít</button>
     </div>
   </div>
